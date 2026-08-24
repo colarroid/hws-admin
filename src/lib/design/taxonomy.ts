@@ -45,8 +45,8 @@ export function labelFor(vocabulary: Vocabulary, slug: string | null): string {
   return vocabulary.find((entry) => entry.slug === slug)?.label ?? slug;
 }
 
-/** Minimum password length, matched by the live hint on sign up and reset. */
-export const MIN_PASSWORD_LENGTH = 10;
+/** Minimum password length, matched by the live feedback on sign up and reset. */
+export const MIN_PASSWORD_LENGTH = 8;
 
 /** A live listing is prompted for re-confirmation after this long. */
 export const FRESHNESS_MONTHS = 6;
