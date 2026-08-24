@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   HWS Portal design tokens.
+   Source: design_handoff_hws_organisations/README.md and
+           design_handoff_hws_portal/README.md (identical palettes).
+   Both sides of the platform build against this one set.
+   --------------------------------------------------------------- */
+
+@theme {
+  /* Ground and surfaces */
+  --color-ground: #f9f6f1;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #fcfcfa;
+
+  /* Ink at graded opacities */
+  --color-ink: #120902;
+  --color-ink-70: rgba(18, 9, 2, 0.7);
+  --color-ink-65: rgba(18, 9, 2, 0.65);
+  --color-ink-60: rgba(18, 9, 2, 0.6);
+  --color-ink-40: rgba(18, 9, 2, 0.4);
+
+  /* Lines */
+  --color-ring: rgba(18, 9, 2, 0.16);
+  --color-hairline: rgba(18, 9, 2, 0.1);
+  --color-hairline-soft: rgba(18, 9, 2, 0.08);
+
+  /* Gold accent. Never use gold-500 for small text, it fails AA on cream. */
+  --color-gold-200: #f7f3eb;
+  --color-gold-300: #ded1b0;
+  --color-gold-500: #8e7b49;
+  --color-gold-700: #5f5230;
+
+  /* Status */
+  --color-sage-200: #eef2ef;
+  --color-green-700: #14672f;
+  --color-red-50: #fdeeeb;
+  --color-red-200: #f1c7c0;
+  --color-red-700: #b91c1c;
+  --color-closed: rgba(18, 9, 2, 0.06);
+
+  /* Type */
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), "Open Sans", system-ui, sans-serif;
+
+  /* Radius */
+  --radius-tag: 6px;
+  --radius-pill-sm: 8px;
+  --radius-control: 10px;
+  --radius-card: 12px;
+  --radius-card-lg: 14px;
+  --radius-full: 999px;
+
+  /* Card shadow */
+  --shadow-card: 0 4px 6px -1px rgba(18, 9, 2, 0.1), 0 2px 4px -2px rgba(18, 9, 2, 0.1);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    background: var(--color-ground);
+    color: var(--color-ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: var(--color-gold-700);
+  }
+
+  a:hover {
+    color: var(--color-gold-500);
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  /* Focus ring is 2px gold-500 with 2px offset on every interactive element. */
+  :is(a, input, button, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+}
