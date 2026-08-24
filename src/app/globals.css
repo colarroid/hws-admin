@@ -78,8 +78,10 @@
     color: var(--color-gold-700);
   }
 
+  /* Underline on hover, not a colour shift: gold 500 does not reach AA on
+     the cream ground at body sizes, so hovering must not move text to it. */
   a:hover {
-    color: var(--color-gold-500);
+    text-decoration: underline;
   }
 
   input,
