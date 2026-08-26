@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
+import { AdminNav } from "@/components/admin/AdminNav";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -39,6 +40,7 @@ export default function RootLayout({
               <span className="rounded-full border border-gold-300 bg-gold-200 px-3 py-1 text-[13px] font-semibold text-gold-700">
                 Admin
               </span>
+              <div className="ml-auto"><AdminNav /></div>
             </div>
           </header>
           <main className="flex flex-1 flex-col">{children}</main>
