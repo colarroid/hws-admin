@@ -12,6 +12,7 @@ export async function AdminNav() {
   return (
     <nav aria-label="Admin" className="flex flex-wrap items-center gap-2">
       <Link href="/queue" className={LINK}>Review queue</Link>
+      <Link href="/organisations" className={LINK}>Verify</Link>
       <Link href="/taxonomy/zones" className={LINK}>Access Zones</Link>
       <Link href="/taxonomy/situations" className={LINK}>Situations</Link>
     </nav>
