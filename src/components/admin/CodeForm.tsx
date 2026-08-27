@@ -62,7 +62,7 @@ export function CodeForm({ email }: { email: string }) {
           autoComplete="one-time-code"
           maxLength={MAX_CODE}
           placeholder="000000"
-          className="rounded-control border-[1.5px] border-ink bg-surface p-[18px] text-center text-[28px] font-semibold tracking-[0.4em] text-ink tabular-nums"
+          className="rounded-control shadow-hairline-ink bg-surface p-[18px] text-center text-[28px] font-semibold tracking-[0.4em] text-ink tabular-nums"
         />
       </div>
       <Button type="submit" disabled={pending || code.length < MIN_CODE}>

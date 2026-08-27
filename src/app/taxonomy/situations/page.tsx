@@ -38,7 +38,7 @@ export default async function SituationsPage({
   return (
     <Page width={820} top={56} gap={30}>
       <div className="flex flex-col gap-[10px]">
-        <h1 className="m-0 font-display text-[32px] font-medium leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
+        <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
           Situations
         </h1>
         <p className="m-0 max-w-[62ch] text-[17px] leading-[1.55] text-ink-70">
@@ -57,14 +57,14 @@ export default async function SituationsPage({
       ) : null}
 
       <section className="flex flex-col gap-[14px]">
-        <h2 className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+        <h2 className="m-0 eyebrow text-ink-60">
           {live.length} in use
         </h2>
 
         {live.map((situation) => (
           <div
             key={situation.id}
-            className="flex flex-col gap-4 rounded-card border border-ring bg-surface p-6"
+            className="flex flex-col gap-4 rounded-card shadow-hairline bg-surface p-6"
           >
             <form action={updateSituation} className="flex flex-col gap-4">
               <input type="hidden" name="id" value={situation.id} />
@@ -148,8 +148,8 @@ export default async function SituationsPage({
         ))}
       </section>
 
-      <section className="flex flex-col gap-4 rounded-card-lg border border-ring bg-surface p-6">
-        <h2 className="m-0 font-display text-[24px] font-medium leading-[1.2]">
+      <section className="flex flex-col gap-4 rounded-card-lg shadow-hairline bg-surface p-6">
+        <h2 className="m-0 font-display text-[24px] font-normal leading-[1.2]">
           Add a situation
         </h2>
         <p className="m-0 max-w-[62ch] text-[16px] leading-[1.6] text-ink-70">
@@ -186,14 +186,14 @@ export default async function SituationsPage({
 
       {retired.length > 0 ? (
         <section className="flex flex-col gap-[14px]">
-          <h2 className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+          <h2 className="m-0 eyebrow text-ink-60">
             Retired
           </h2>
           {retired.map((situation) => (
             <form
               key={situation.id}
               action={restoreSituation}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-ring bg-surface-subtle p-5"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-card shadow-hairline bg-surface-subtle p-5"
             >
               <input type="hidden" name="id" value={situation.id} />
               <div className="flex flex-col gap-1">

@@ -42,7 +42,7 @@ export function ReviewForm({
   return (
     <div className="flex flex-col gap-7 border-t border-hairline pt-7">
       <div className="flex flex-col gap-3">
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+        <span className="eyebrow text-ink-60">
           What we check
         </span>
         <div className="flex flex-col gap-2">
@@ -76,7 +76,7 @@ export function ReviewForm({
       <form action={approve} className="flex flex-col gap-5">
         <input type="hidden" name="listingId" value={listing.id} />
 
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+        <span className="eyebrow text-ink-60">
           Edit wording for clarity
         </span>
 

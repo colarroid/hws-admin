@@ -43,16 +43,34 @@
   --font-display: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), "Open Sans", system-ui, sans-serif;
 
-  /* Radius */
+  /* Radius. design.md collapses this: one card radius at 12px, buttons and
+     inputs at 4-6px, pills fully round. The handoff's 14px card and 10px
+     control are folded into those. Inputs share the button radius rather
+     than design.md's pill, since a pill-shaped textarea does not work. */
   --radius-tag: 6px;
   --radius-pill-sm: 8px;
-  --radius-control: 10px;
+  --radius-control: 6px;
   --radius-card: 12px;
-  --radius-card-lg: 14px;
+  --radius-card-lg: 12px;
   --radius-full: 999px;
 
   /* Card shadow */
   --shadow-card: 0 4px 6px -1px rgba(18, 9, 2, 0.1), 0 2px 4px -2px rgba(18, 9, 2, 0.1);
+
+  /* The hairline trick from design.md: a 1px box-shadow ring instead of a
+     real border, paired with a soft drop shadow. It renders crisper than a
+     CSS border, and because it sits outside the box it never eats into the
+     padding the way a border-box border does. -gold is the hover state,
+     -ink the 2px selected state. */
+  --shadow-hairline: 0 0 0 1px rgba(18, 9, 2, 0.16), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-hairline-gold: 0 0 0 1px #8e7b49, 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-hairline-ink: 0 0 0 2px #120902;
+  --shadow-hairline-red: 0 0 0 1.5px #b91c1c, 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* Motion. design.md's 200ms is the state-change duration; the 150ms
+     colour fade already in use here is kept for hovers. */
+  --ease-open: cubic-bezier(0.45, 0, 0.37, 1.11);
+  --ease-drop: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @layer base {
@@ -95,5 +113,44 @@
   :is(a, input, button, textarea, select, [tabindex]):focus-visible {
     outline: 2px solid var(--color-gold-500);
     outline-offset: 2px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Type conventions from design.md.
+
+   Headings are serif at regular weight and never bold; emphasis inside a
+   heading is a single italic word, not a weight shift. The `.eyebrow`
+   overline is the one place letter-spacing goes wide.
+
+   Eyebrows carry no colour of their own so they compose with text-ink-60 and
+   text-gold-700 rather than racing them for the cascade. Both stay off
+   design.md's 50% ink: at 12px on cream, dropping to 50% is the same class
+   of legibility loss as the gold and the body size we held back, and this
+   audience is the reason for all three.
+   --------------------------------------------------------------- */
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* The centred-label divider: two hairlines flanking a short phrase, used to
+   introduce a fork in the flow without a heavy section break. */
+@utility rule-label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-hairline);
   }
 }

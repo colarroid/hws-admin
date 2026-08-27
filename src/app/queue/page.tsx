@@ -29,7 +29,7 @@ export default async function QueuePage({
   return (
     <Page width={820} top={56} gap={26}>
       <div className="flex flex-col gap-[10px]">
-        <h1 className="m-0 font-display text-[32px] font-medium leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
+        <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
           Review queue
         </h1>
         <p className="m-0 text-[17px] leading-[1.55] text-ink-70">
@@ -57,10 +57,10 @@ export default async function QueuePage({
             <Link
               key={item.id}
               href={`/queue/${item.id}`}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-ring bg-surface p-6 no-underline transition-colors duration-150 ease-out hover:border-gold-500"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-card shadow-hairline bg-surface p-6 no-underline transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold"
             >
               <div className="flex flex-col gap-1">
-                <span className="text-[20px] font-bold leading-[1.3] text-ink">
+                <span className="font-display text-[20px] font-normal leading-[1.3] text-ink">
                   {item.name}
                 </span>
                 <span className="text-[15px] text-ink-65">

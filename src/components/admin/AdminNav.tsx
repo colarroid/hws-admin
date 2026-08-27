@@ -3,9 +3,9 @@ import { MobileNav } from "@/components/ui/MobileNav";
 import { getAdmin } from "@/lib/data/admin";
 
 const LINK =
-  "inline-flex min-h-[44px] items-center rounded-full border border-ring bg-surface " +
+  "inline-flex min-h-[44px] items-center rounded-full shadow-hairline bg-surface " +
   "px-4 py-[9px] text-[15px] font-semibold text-ink no-underline " +
-  "transition-colors duration-150 ease-out hover:border-gold-500";
+  "transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold";
 
 /** One list, two layouts, so the desktop row and mobile panel cannot drift. */
 function Links() {

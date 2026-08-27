@@ -36,10 +36,10 @@ export function Chip({
       onClick={onToggle}
       className={[
         "inline-flex items-center gap-2 min-h-[44px] rounded-full px-[18px] py-3",
-        "text-[15px] cursor-pointer transition-colors duration-150",
+        "text-[15px] cursor-pointer transition-[color,background-color,box-shadow] duration-150",
         selected
-          ? "bg-ink text-white border-2 border-ink font-semibold"
-          : "bg-surface text-ink border border-ring font-normal hover:border-gold-500",
+          ? "bg-ink text-white shadow-hairline-ink font-semibold"
+          : "bg-surface text-ink shadow-hairline font-normal hover:shadow-hairline-gold",
       ].join(" ")}
     >
       {showCheck && selected ? (

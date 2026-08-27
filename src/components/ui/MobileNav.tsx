@@ -56,7 +56,7 @@ export function MobileNav({
         aria-expanded={open}
         aria-controls="mobile-nav"
         aria-label={open ? `Close ${label}` : `Open ${label}`}
-        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control border border-ring bg-surface text-ink transition-colors duration-150 ease-out hover:border-gold-500 lg:hidden"
+        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control shadow-hairline bg-surface text-ink transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold lg:hidden"
       >
         {open ? <CloseIcon /> : <MenuIcon />}
       </button>

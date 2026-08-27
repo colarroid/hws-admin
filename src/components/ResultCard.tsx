@@ -42,7 +42,7 @@ export function ResultCard({
   saveSlot,
   actionSlot,
   /**
-   * Draws the heavy border permanently. Used by the organisation preview,
+   * Draws the heavy ink ring permanently. Used by the organisation preview,
    * where a single card stands alone and needs an edge.
    */
   strongest = false,
@@ -73,7 +73,7 @@ export function ResultCard({
     <article
       className={[
         "flex flex-col gap-[14px] rounded-card-lg bg-surface p-7",
-        strongest ? "border-2 border-ink" : "border border-ring",
+        strongest ? "shadow-hairline-ink" : "shadow-hairline",
         // outline rather than a thicker border: it is drawn outside the box
         // model, so nothing reflows and the cards below do not jump as the
         // pointer crosses them. focus-within means tabbing to Save or Learn
@@ -90,11 +90,11 @@ export function ResultCard({
       <div className="flex items-start justify-between gap-6">
         <div className="flex flex-col gap-[5px]">
           {bestMatch ? (
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gold-700">
+            <span className="eyebrow text-gold-700">
               Best match
             </span>
           ) : null}
-          <h2 className={`m-0 text-[23px] font-bold leading-[1.25] ${dim(data.name)}`}>
+          <h2 className={`m-0 font-display text-[24px] font-normal leading-[1.33] ${dim(data.name)}`}>
             {fallback(data.name)}
           </h2>
           <span className="text-[15px] text-ink-65">{data.source}</span>
@@ -104,7 +104,7 @@ export function ResultCard({
         /* Inert. This is a preview of her card, not her card. */
         <span
           aria-hidden="true"
-          className="flex items-center gap-2 whitespace-nowrap rounded-control border border-ring bg-surface px-4 py-3 text-[15px] font-bold text-ink"
+          className="flex items-center gap-2 whitespace-nowrap rounded-control shadow-hairline bg-surface px-4 py-3 text-[15px] font-bold text-ink"
         >
           <Bookmark size={17} strokeWidth={2} className="text-gold-500" />
           <span>Save</span>
@@ -134,7 +134,7 @@ export function ResultCard({
 
       <div className="grid grid-cols-1 gap-4 border-t border-hairline-soft pt-[14px] sm:grid-cols-2 sm:gap-x-8">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+          <span className="eyebrow text-ink-60">
             Who it&apos;s for
           </span>
           <span className={`text-[15px] leading-[1.5] ${dim(data.whoFor)}`}>
@@ -142,7 +142,7 @@ export function ResultCard({
           </span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+          <span className="eyebrow text-ink-60">
             What to expect
           </span>
           <span className={`text-[15px] leading-[1.5] ${dim(data.whatToExpect)}`}>

@@ -3,18 +3,19 @@ import type { ComponentPropsWithoutRef } from "react";
 
 type Variant = "primary" | "secondary" | "text" | "destructive";
 
-// Motion stays minimal by design: colour only, 150ms, no transform. The
-// target device is older Android hardware, where transforms cost frames.
+// Motion stays minimal by design: colour and the hairline ring only, 150ms,
+// no transform. The target device is older Android hardware, where
+// transforms cost frames.
 const VARIANTS: Record<Variant, string> = {
-  // Ink fill, white text, 17px weight 700, 17px padding, radius 10px.
+  // Ink fill, white text, 17px weight 700, 17px padding, radius 6px.
   primary: "bg-ink text-white border-0 font-bold hover:opacity-90",
-  // White fill, ring border. Used for Save, Mark applied, Keep editing.
-  secondary: "bg-surface text-ink border border-ring font-bold hover:border-gold-500",
+  // White fill, hairline ring. Used for Save, Mark applied, Keep editing.
+  secondary: "bg-surface text-ink shadow-hairline font-bold hover:shadow-hairline-gold",
   // Gold 700, never gold 500: gold 500 fails AA at these sizes on cream.
   // Hover underlines rather than shifting colour, for the same reason.
   text: "bg-transparent text-gold-700 border-0 font-bold hover:underline",
   destructive:
-    "bg-surface text-red-700 border-[1.5px] border-red-700 font-bold hover:bg-red-50",
+    "bg-surface text-red-700 shadow-hairline-red font-bold hover:bg-red-50",
 };
 
 const SIZES = {
@@ -36,7 +37,7 @@ type Common = {
 /** 44px minimum target, applied to every variant including text buttons. */
 const BASE =
   "inline-flex items-center justify-center gap-2 min-h-[44px] cursor-pointer " +
-  "transition-colors duration-150 ease-out " +
+  "transition-[color,background-color,box-shadow] duration-150 ease-out " +
   "disabled:opacity-40 disabled:cursor-not-allowed";
 
 export function Button({

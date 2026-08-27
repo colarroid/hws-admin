@@ -16,7 +16,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", {
 function Fact({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex flex-col gap-1 border-t border-hairline-soft pt-4">
-      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+      <span className="eyebrow text-ink-60">
         {label}
       </span>
       <span className={`text-[17px] leading-[1.5] ${value ? "" : "text-ink-60 italic"}`}>
@@ -63,7 +63,7 @@ export default async function VerifyOrganisationPage({
       </Link>
 
       <div className="flex flex-col gap-[10px]">
-        <h1 className="m-0 font-display text-[30px] font-medium leading-[1.1] tracking-[-0.01em] sm:text-[38px]">
+        <h1 className="m-0 font-display text-[30px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[38px]">
           {organisation.name}
         </h1>
         <p className="m-0 text-[17px] text-ink-65">
@@ -84,7 +84,7 @@ export default async function VerifyOrganisationPage({
 
       {organisation.reviewNote ? (
         <div className="rounded-card border border-gold-300 bg-gold-200 px-[22px] py-5">
-          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gold-700">
+          <span className="eyebrow text-gold-700">
             Last thing we said to them
           </span>
           <p className="m-0 pt-2 text-[16px] leading-[1.6] text-gold-700">
@@ -95,7 +95,7 @@ export default async function VerifyOrganisationPage({
 
       {/* The one thing a reviewer actually has to do, made one click. */}
       <section className="flex flex-col gap-3">
-        <h2 className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+        <h2 className="m-0 eyebrow text-ink-60">
           Registration
         </h2>
         <p className="m-0 text-[22px] font-bold tabular-nums">
@@ -107,7 +107,7 @@ export default async function VerifyOrganisationPage({
               href={links.charity}
               rel="noopener noreferrer"
               target="_blank"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-control border border-ring bg-surface px-5 py-3 text-[16px] font-bold text-ink no-underline hover:border-gold-500"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-control shadow-hairline bg-surface px-5 py-3 text-[16px] font-bold text-ink no-underline transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold"
             >
               Check on OSCR
               <ExternalLink size={16} strokeWidth={2} aria-hidden="true" />
@@ -116,7 +116,7 @@ export default async function VerifyOrganisationPage({
               href={links.company}
               rel="noopener noreferrer"
               target="_blank"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-control border border-ring bg-surface px-5 py-3 text-[16px] font-bold text-ink no-underline hover:border-gold-500"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-control shadow-hairline bg-surface px-5 py-3 text-[16px] font-bold text-ink no-underline transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold"
             >
               Check on Companies House
               <ExternalLink size={16} strokeWidth={2} aria-hidden="true" />
@@ -131,7 +131,7 @@ export default async function VerifyOrganisationPage({
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-60">
+        <h2 className="m-0 eyebrow text-ink-60">
           What they told us
         </h2>
         <Fact label="Who funds them" value={organisation.funderNote} />
