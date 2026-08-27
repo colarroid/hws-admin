@@ -19,6 +19,9 @@ type ChipProps = {
  * Single-select and multi-select share the visual; only the toggle behaviour
  * differs. State is conveyed by colour and weight, so aria-pressed carries it
  * for anyone not seeing the fill.
+ *
+ * Selected carries no ring. The fill is already ink, so a ring in the same
+ * colour only reads as a heavy border around a dark button.
  */
 export function Chip({
   label,
@@ -38,7 +41,7 @@ export function Chip({
         "inline-flex items-center gap-2 min-h-[44px] rounded-full px-[18px] py-3",
         "text-[15px] cursor-pointer transition-[color,background-color,box-shadow] duration-150",
         selected
-          ? "bg-ink text-white shadow-hairline-ink font-semibold"
+          ? "bg-ink text-white font-semibold"
           : "bg-surface text-ink shadow-hairline font-normal hover:shadow-hairline-gold",
       ].join(" ")}
     >
