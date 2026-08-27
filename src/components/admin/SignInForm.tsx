@@ -17,7 +17,6 @@ export function SignInForm() {
         type="email"
         autoComplete="email"
         placeholder="you@hws.org"
-        emphasis
         required
       />
       <SubmitButton>Send me a code</SubmitButton>
