@@ -6,52 +6,44 @@ import { createClient } from "@/lib/supabase/server";
 
 export type FormState = { error?: string } | null;
 
-const email = z.string().trim().min(1, "Add your email address.").email();
+const schema = z.object({
+  email: z.string().trim().min(1, "Add your email address.").email(),
+  password: z.string().min(1, "Add your password."),
+});
 
 /**
- * Send a sign-in code.
+ * Sign in with an email address and a password.
  *
- * `shouldCreateUser` is false, so this can never bring an account into
- * existence. Admin accounts are made by hand; there is no path from this
- * screen to becoming one.
+ * Nothing here can create an account. Admin is granted by hand against the
+ * database, because `handle_new_user` resolves any self-claimed role other
+ * than `organisation` to `woman`, so there is no path from this screen to
+ * becoming staff.
+ *
+ * One message covers both a wrong password and an address that is not staff
+ * at all. Distinguishing them would turn this form into a way to ask which
+ * addresses belong to HWS, and that is worth more to an attacker than it is
+ * to the handful of people who work here.
  */
-export async function sendCode(
+export async function signIn(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const parsed = email.safeParse(formData.get("email"));
+  const parsed = schema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
-  await supabase.auth.signInWithOtp({
-    email: parsed.data,
-    options: { shouldCreateUser: false },
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
   });
 
-  // The same response either way. This screen never confirms whether an
-  // address belongs to staff.
-  redirect(`/sign-in/code?email=${encodeURIComponent(parsed.data)}`);
-}
+  const denied = { error: "That email address and password do not match." };
 
-export async function verifyCode(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const address = String(formData.get("email") ?? "");
-  const token = String(formData.get("code") ?? "").replace(/\D/g, "");
-
-  if (token.length < 6) return { error: "That code looks too short." };
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.verifyOtp({
-    email: address,
-    token,
-    type: "email",
-  });
-
-  if (error || !data.user) {
-    return { error: "That code didn't work. Ask for a new one below." };
-  }
+  if (error || !data.user) return denied;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -60,10 +52,11 @@ export async function verifyCode(
     .maybeSingle();
 
   if (profile?.role !== "admin") {
-    // A valid code for a real account that is not staff. Sign the session
-    // straight back out rather than leaving it half-open.
+    // Real credentials for an account that is not staff: an organisation, or
+    // a woman. Sign the session straight back out rather than leaving this
+    // deployment holding one it should never have opened.
     await supabase.auth.signOut();
-    return { error: "That account doesn't have access to these tools." };
+    return denied;
   }
 
   redirect("/queue");

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Playfair_Display, Inter } from "next/font/google";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { getAdmin } from "@/lib/data/admin";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -34,10 +35,16 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Nothing here is reachable signed out except sign-in itself, so the header
+  // has nothing to say until there is an admin. Rendering it anyway left the
+  // sign-in screen wearing a bar with an empty right-hand side.
+  const admin = await getAdmin();
+
   return (
     <html lang="en-GB" className={`${playfair.variable} ${inter.variable}`}>
       <body>
         <div className="flex min-h-screen flex-col bg-ground text-ink">
+          {admin ? (
           <header className="sticky top-0 z-20 border-b border-hairline bg-ground">
             {/* relative so the mobile panel can hang off the bottom edge */}
             <div className="relative flex w-full items-center gap-[14px] px-5 py-[18px] sm:px-8 lg:px-10">
@@ -58,6 +65,7 @@ export default async function RootLayout({
               <div className="ml-auto flex items-center"><AdminNav /></div>
             </div>
           </header>
+          ) : null}
           <main className="flex flex-1 flex-col">{children}</main>
         </div>
       </body>
