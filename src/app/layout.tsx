@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Playfair_Display, Inter } from "next/font/google";
 import { AdminNav } from "@/components/admin/AdminNav";
 import "./globals.css";
@@ -35,9 +36,20 @@ export default async function RootLayout({
           <header className="sticky top-0 z-20 border-b border-hairline bg-ground">
             {/* relative so the mobile panel can hang off the bottom edge */}
             <div className="relative flex w-full items-center gap-[14px] px-5 py-[18px] sm:px-8 lg:px-10">
-              <span className="text-[15px] font-bold uppercase tracking-[0.14em] text-ink">
-                Logo
-              </span>
+              {/* Not a link, matching what was here before: the admin tools
+                  have no public front page to return to. So the name lives on
+                  alt rather than on a wrapper. */}
+              <Image
+                src="/logo.svg"
+                alt="HWS Pathgrid"
+                width={100}
+                height={36}
+                priority
+                className="shrink-0"
+                // Served as authored. The image optimiser does not process
+                // SVG, and there is nothing to gain from it on a 5KB vector.
+                unoptimized
+              />
               <span className="hidden rounded-full border border-gold-300 bg-gold-200 px-3 py-1 text-[13px] font-semibold text-gold-700 sm:inline">
                 Admin
               </span>
