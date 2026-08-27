@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Page } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -9,6 +10,8 @@ import {
   retireSituation,
   restoreSituation,
 } from "../actions";
+
+export const metadata: Metadata = { title: "Situations" };
 
 /**
  * Situation management.

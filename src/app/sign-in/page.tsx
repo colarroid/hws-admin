@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { Page } from "@/components/ui/Page";
 import { SignInForm } from "@/components/admin/SignInForm";
+
+export const metadata: Metadata = { title: "Sign in" };
 
 export default function SignInPage() {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -25,6 +26,8 @@ function Fact({ label, value }: { label: string; value: string | null }) {
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Verify organisation" };
 
 /**
  * Verifying one organisation.

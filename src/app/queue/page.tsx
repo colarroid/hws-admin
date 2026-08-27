@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Page } from "@/components/ui/Page";
 import { requireAdmin } from "@/lib/data/admin";
@@ -9,6 +10,8 @@ const DATE = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
 });
+
+export const metadata: Metadata = { title: "Review queue" };
 
 /**
  * The review queue.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, TriangleAlert } from "lucide-react";
@@ -9,6 +10,8 @@ import { getReviewListing } from "@/lib/data/queue";
 import { COSTS, FORMATS, SOLUTION_KINDS, labelFor } from "@/lib/design/taxonomy";
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+
+export const metadata: Metadata = { title: "Review listing" };
 
 /**
  * Reviewing one listing.

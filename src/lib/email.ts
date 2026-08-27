@@ -1,6 +1,23 @@
 import "server-only";
 
 /**
+ * Addresses reserved by RFC 2606 and RFC 6761 for documentation and testing.
+ * Nothing behind them can receive mail, so every send is a guaranteed bounce.
+ *
+ * The seed script creates accounts under `example.org`, and the cron jobs
+ * read whatever address sits on a user and send to it. Left alone, that is a
+ * bounce on a schedule, and bounce rate is what decides whether the mail that
+ * matters — a confirmation link, a deadline reminder — reaches an inbox or a
+ * spam folder. Providers also suspend senders over it.
+ */
+const UNDELIVERABLE = /@(?:[^@]*\.)?(?:example\.(?:com|net|org)|test|invalid|localhost|local)$/i;
+
+/** Exported so a caller can skip the work of composing a message at all. */
+export function isUndeliverable(address: string) {
+  return UNDELIVERABLE.test(address.trim());
+}
+
+/**
  * Send one email through Resend.
  *
  * Sender name and subject are the caller's responsibility and both must stay
@@ -25,6 +42,12 @@ export async function sendEmail({
 
   if (!key || !from) {
     return { ok: false, error: "RESEND_API_KEY or EMAIL_FROM is not set." };
+  }
+
+  // Refused here rather than at each caller, so a reserved address cannot
+  // reach the provider by way of a route nobody thought to guard.
+  if (isUndeliverable(to)) {
+    return { ok: false, error: `Refused to send to a reserved address: ${to}` };
   }
 
   const response = await fetch("https://api.resend.com/emails", {

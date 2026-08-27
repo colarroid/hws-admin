@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Page } from "@/components/ui/Page";
 import { requireAdmin } from "@/lib/data/admin";
@@ -7,6 +8,8 @@ const LABELS: Record<string, string> = {
   pending: "Waiting",
   more_evidence: "Waiting on them",
 };
+
+export const metadata: Metadata = { title: "Verify organisations" };
 
 /**
  * Organisations to verify.

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Page } from "@/components/ui/Page";
 import { CodeForm } from "@/components/admin/CodeForm";
+
+export const metadata: Metadata = { title: "Check your email" };
 
 export default async function CodePage({
   searchParams,

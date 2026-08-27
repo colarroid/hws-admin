@@ -20,7 +20,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HWS admin",
+  /* Every screen sets its own title; the template adds the suffix. The
+     default covers only the root redirect, which never paints. */
+  title: {
+    default: "HWS admin",
+    template: "%s | HWS admin",
+  },
   description: "Internal tools for the HWS Portal.",
   // Internal only. Keep it out of search results whatever else happens.
   robots: { index: false, follow: false },

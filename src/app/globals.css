@@ -138,19 +138,3 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
-
-/* The centred-label divider: two hairlines flanking a short phrase, used to
-   introduce a fork in the flow without a heavy section break. */
-@utility rule-label {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--color-hairline);
-  }
-}

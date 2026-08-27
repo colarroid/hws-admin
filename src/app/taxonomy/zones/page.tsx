@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Page } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { Field, TextAreaField } from "@/components/ui/Field";
@@ -15,6 +16,8 @@ const DATE = new Intl.DateTimeFormat("en-GB", {
   month: "long",
   year: "numeric",
 });
+
+export const metadata: Metadata = { title: "Access Zones" };
 
 /**
  * Access Zone management.
