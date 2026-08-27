@@ -50,9 +50,6 @@ export default async function RootLayout({
                 // SVG, and there is nothing to gain from it on a 5KB vector.
                 unoptimized
               />
-              <span className="hidden rounded-full border border-gold-300 bg-gold-200 px-3 py-1 text-[13px] font-semibold text-gold-700 sm:inline">
-                Admin
-              </span>
               <div className="ml-auto flex items-center"><AdminNav /></div>
             </div>
           </header>
