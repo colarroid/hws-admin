@@ -66,12 +66,19 @@ export function MobileNav({
         not in the tab order while the panel is shut.
       */}
       {open ? (
+        /*
+          A sheet that floats clear of the header rather than a strip welded
+          to its underside. Inset on both sides so the page shows past it, its
+          own radius and shadow so it reads as a layer above rather than more
+          header, and white against the cream ground so the two are not the
+          same surface at different heights.
+        */
         <nav
           id="mobile-nav"
           aria-label={label}
-          className="absolute left-0 right-0 top-full flex flex-col gap-2 border-b border-hairline bg-ground px-5 pb-5 pt-1 shadow-card lg:hidden"
+          className="panel-in absolute left-0 right-0 top-full z-30 px-4 pt-2 lg:hidden"
         >
-          {children}
+          <div className="rounded-card bg-surface p-2 shadow-panel">{children}</div>
         </nav>
       ) : null}
     </>

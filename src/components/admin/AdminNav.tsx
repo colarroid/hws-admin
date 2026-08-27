@@ -9,6 +9,14 @@ const LINK =
   "px-4 py-[9px] text-[15px] font-semibold text-ink no-underline " +
   "transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold";
 
+/* In the panel the sheet is already a raised white surface, so a ringed
+   white pill on it reads as flat. Rows instead, which is also what the
+   organisation portal shows there. */
+const PANEL_LINK =
+  "inline-flex w-full min-h-[44px] items-center gap-3 rounded-control px-3 py-[10px] " +
+  "text-[15px] font-medium text-ink-70 no-underline " +
+  "transition-[color,background-color] duration-150 ease-out hover:bg-gold-200/60 hover:text-ink";
+
 /**
  * Sign out.
  *
@@ -42,13 +50,14 @@ function SignOutControl({ label = false }: { label?: boolean }) {
 }
 
 /** One list, two layouts, so the desktop row and mobile panel cannot drift. */
-function Links() {
+function Links({ panel = false }: { panel?: boolean }) {
+  const cls = panel ? PANEL_LINK : LINK;
   return (
     <>
-      <Link href="/queue" className={LINK}>Review queue</Link>
-      <Link href="/organisations" className={LINK}>Verify</Link>
-      <Link href="/taxonomy/zones" className={LINK}>Access Zones</Link>
-      <Link href="/taxonomy/situations" className={LINK}>Situations</Link>
+      <Link href="/queue" className={cls}>Review queue</Link>
+      <Link href="/organisations" className={cls}>Verify</Link>
+      <Link href="/taxonomy/zones" className={cls}>Access Zones</Link>
+      <Link href="/taxonomy/situations" className={cls}>Situations</Link>
     </>
   );
 }
@@ -72,7 +81,7 @@ export async function AdminNav() {
       </nav>
 
       <MobileNav label="admin menu">
-        <Links />
+        <Links panel />
         <SignOutControl label />
       </MobileNav>
     </>
