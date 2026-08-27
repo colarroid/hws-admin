@@ -25,8 +25,8 @@ export default function SignInPage() {
           <Image
             src="/logo.svg"
             alt="HWS Pathgrid"
-            width={116}
-            height={42}
+            width={139}
+            height={50}
             priority
             className="shrink-0 self-start"
             // Served as authored. The image optimiser does not process SVG,
@@ -39,8 +39,7 @@ export default function SignInPage() {
               HWS admin
             </h1>
             <p className="m-0 text-[17px] leading-[1.55] text-ink-70">
-              Sign in with your email address and password. Accounts are created
-              by hand, not here.
+              Sign in to continue.
             </p>
           </div>
         </div>
