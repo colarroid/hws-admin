@@ -3,17 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Field, TextAreaField } from "@/components/ui/Field";
-import { createZone } from "@/app/taxonomy/actions";
+import { Field } from "@/components/ui/Field";
+import { createSituation } from "@/app/taxonomy/actions";
 
-/**
- * Adding a zone, behind a button.
- *
- * It sat open at the bottom of the screen, which put a blank form on a page
- * whose job is to show what already exists. Adding a zone is rare and
- * deliberate, so it asks to be opened like editing one does.
- */
-export function AddZone() {
+const DIALOG =
+  "m-auto max-h-[calc(100vh-48px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto " +
+  "rounded-card border-0 bg-surface p-0 text-ink shadow-panel backdrop:bg-ink/40";
+
+/** Adding a situation, behind a button, matching the zone screen. */
+export function AddSituation() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -33,41 +31,48 @@ export function AddZone() {
         onClick={() => setOpen(true)}
       >
         <Plus size={17} strokeWidth={2} aria-hidden="true" />
-        Add a zone
+        Add a situation
       </Button>
 
       <dialog
         ref={dialogRef}
         onClose={() => setOpen(false)}
-        aria-label="Add a zone"
-        className="m-auto max-h-[calc(100vh-48px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto rounded-card border-0 bg-surface p-0 text-ink shadow-panel backdrop:bg-ink/40"
+        aria-label="Add a situation"
+        className={DIALOG}
       >
         <div className="flex flex-col gap-5 p-6">
           <div className="flex flex-col gap-2">
             <h2 className="m-0 font-display text-[26px] font-normal leading-[1.2]">
-              Add a zone
+              Add a situation
             </h2>
             <p className="m-0 text-[16px] leading-[1.6] text-ink-70">
-              Housing, safety and rights, support for new Scots, and caring and
-              family life have no zone yet. Organisations working in those areas
-              have nothing to pick until one exists.
+              This puts a new chip on question three and a new tag on the
+              organisation form. Existing listings will not carry it until an
+              organisation ticks it.
             </p>
           </div>
 
-          <form action={createZone} className="flex flex-col gap-4">
+          <form action={createSituation} className="flex flex-col gap-4">
             <Field
-              label="Name"
-              name="name"
+              label="Label"
+              name="label"
               required
-              placeholder="e.g. Housing &amp; Practical Support"
+              placeholder="e.g. Leaving the armed forces"
             />
-            <TextAreaField
-              label="Focus"
-              name="focus"
-              rows={2}
-              required
-              placeholder="e.g. Housing information, homelessness prevention, household support"
+            <Field
+              label="Match phrase"
+              name="matchPhrase"
+              placeholder="e.g. you're leaving the armed forces"
+              hint="Optional. Left blank, the reason falls back to the label."
             />
+            <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-[16px]">
+              <input
+                type="checkbox"
+                name="womanOnly"
+                className="h-[18px] w-[18px] accent-[#120902]"
+              />
+              <span>Her answer only, never a listing tag</span>
+            </label>
             <div className="flex flex-wrap justify-end gap-3">
               <Button
                 type="button"
@@ -78,7 +83,7 @@ export function AddZone() {
                 Cancel
               </Button>
               <Button type="submit" size="inline">
-                Add zone
+                Add situation
               </Button>
             </div>
           </form>

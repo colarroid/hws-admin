@@ -78,7 +78,7 @@ export function ZoneRow({
         ref={dialogRef}
         onClose={() => setOpen(false)}
         aria-label={`Edit ${zone.name}`}
-        className="w-[min(560px,calc(100vw-32px))] rounded-card border-0 bg-surface p-0 text-ink shadow-panel backdrop:bg-ink/40"
+        className="m-auto max-h-[calc(100vh-48px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto rounded-card border-0 bg-surface p-0 text-ink shadow-panel backdrop:bg-ink/40"
       >
         <div className="flex flex-col gap-5 p-6">
           <div className="flex flex-col gap-1">

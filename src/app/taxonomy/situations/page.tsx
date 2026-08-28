@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { Page } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
-import { Field } from "@/components/ui/Field";
 import { requireAdmin } from "@/lib/data/admin";
 import { getSituations } from "@/lib/data/taxonomy";
-import {
-  createSituation,
-  updateSituation,
-  retireSituation,
-  restoreSituation,
-} from "../actions";
+import { SituationRow } from "@/components/admin/SituationRow";
+import { AddSituation } from "@/components/admin/AddSituation";
+import { restoreSituation } from "../actions";
 
 export const metadata: Metadata = { title: "Situations" };
 
@@ -20,11 +16,14 @@ export const metadata: Metadata = { title: "Situations" };
  * the tags an organisation puts on a listing. Editing here changes both,
  * which is the point of it being one table.
  *
- * The match phrase is the part that is easy to overlook and most visible.
- * It is the fragment that appears in "Why this matched you", and the labels
- * are a mix of verb and noun phrases, so no single sentence template fits
- * them all. Left blank the ranker falls back to the label, which reads
- * bluntly rather than breaking.
+ * A list, with editing behind a dialog, matching the zone screen. Twelve of
+ * these as open forms was a wall of inputs where nothing could be scanned.
+ *
+ * The match phrase is the part that is easy to overlook and most visible. It
+ * is the fragment that appears in "Why this matched you", and the labels are
+ * a mix of verb and noun phrases, so no single sentence template fits them
+ * all. Left blank the ranker falls back to the label, which reads bluntly
+ * rather than breaking, so the row says when one is missing.
  */
 export default async function SituationsPage({
   searchParams,
@@ -59,144 +58,38 @@ export default async function SituationsPage({
         </p>
       ) : null}
 
-      <section className="flex flex-col gap-[14px]">
-        <h2 className="m-0 eyebrow text-ink-60">
-          {live.length} in use
-        </h2>
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="m-0 eyebrow text-ink-60">{live.length} in use</h2>
+          <AddSituation />
+        </div>
 
-        {live.map((situation) => (
-          <div
-            key={situation.id}
-            className="flex flex-col gap-4 rounded-card shadow-hairline bg-surface p-6"
-          >
-            <form action={updateSituation} className="flex flex-col gap-4">
-              <input type="hidden" name="id" value={situation.id} />
-
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="min-w-[240px] flex-1">
-                  <Field
-                    label="Label"
-                    name="label"
-                    defaultValue={situation.label}
-                    required
-                    hint="What she reads on the chip."
-                  />
-                </div>
-                <div className="w-[110px]">
-                  <Field
-                    label="Order"
-                    name="sortOrder"
-                    type="number"
-                    defaultValue={String(situation.sortOrder)}
-                  />
-                </div>
-              </div>
-
-              <Field
-                label="Match phrase"
-                name="matchPhrase"
-                defaultValue={situation.matchPhrase ?? ""}
-                placeholder="you're returning to work"
-                hint={`Reads as "Why this matched you: you told us ___". Second person, lower case, no full stop.`}
-              />
-
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-[16px]">
-                <input
-                  type="checkbox"
-                  name="womanOnly"
-                  defaultChecked={situation.womanOnly}
-                  className="h-[18px] w-[18px] accent-[#120902]"
-                />
-                <span>
-                  Her answer only, never a listing tag
-                  <span className="block text-[14px] leading-[1.5] text-ink-60">
-                    For answers like &ldquo;Prefer not to say&rdquo;, which she
-                    can give but no listing can claim.
-                  </span>
-                </span>
-              </label>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-[14px] text-ink-60">
-                  <code className="rounded-[4px] bg-closed px-[5px] py-[1px] text-[13px]">
-                    {situation.slug}
-                  </code>{" "}
-                  &middot; on {situation.listingCount} listing
-                  {situation.listingCount === 1 ? "" : "s"}
-                </span>
-                <div className="flex gap-3">
-                  <Button type="submit" variant="secondary" size="inline">
-                    Save changes
-                  </Button>
-                </div>
-              </div>
-            </form>
-
-            <form
-              action={retireSituation}
-              className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline-soft pt-4"
-            >
-              <input type="hidden" name="id" value={situation.id} />
-              <span className="text-[14px] leading-[1.5] text-ink-60">
-                {/* No successor, unlike a zone: reassigning what she said
-                    about herself would put words in her mouth. */}
-                Retiring stops it being offered and stops it matching. Listings
-                keep the tag, and you can put it back.
-              </span>
-              <Button type="submit" variant="destructive" size="inline">
-                Retire
-              </Button>
-            </form>
-          </div>
-        ))}
-      </section>
-
-      <section className="flex flex-col gap-4 rounded-card-lg shadow-hairline bg-surface p-6">
-        <h2 className="m-0 font-display text-[24px] font-normal leading-[1.2]">
-          Add a situation
-        </h2>
-        <p className="m-0 max-w-[62ch] text-[16px] leading-[1.6] text-ink-70">
-          Adding one puts a new chip on question three and a new tag on the
-          organisation form. Existing listings will not carry it until an
-          organisation ticks it.
-        </p>
-        <form action={createSituation} className="flex flex-col gap-4">
-          <Field
-            label="Label"
-            name="label"
-            required
-            placeholder="e.g. Leaving the armed forces"
-          />
-          <Field
-            label="Match phrase"
-            name="matchPhrase"
-            placeholder="e.g. you're leaving the armed forces"
-            hint="Optional. Left blank, the reason falls back to the label."
-          />
-          <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-[16px]">
-            <input
-              type="checkbox"
-              name="womanOnly"
-              className="h-[18px] w-[18px] accent-[#120902]"
+        <div className="flex flex-col rounded-card bg-surface px-[22px] py-2 shadow-hairline">
+          {live.map((situation) => (
+            <SituationRow
+              key={situation.id}
+              situation={{
+                id: situation.id,
+                slug: situation.slug,
+                label: situation.label,
+                matchPhrase: situation.matchPhrase,
+                sortOrder: situation.sortOrder,
+                womanOnly: situation.womanOnly,
+                listingCount: situation.listingCount,
+              }}
             />
-            <span>Her answer only, never a listing tag</span>
-          </label>
-          <Button type="submit" size="inline" className="self-start px-6 py-4">
-            Add situation
-          </Button>
-        </form>
+          ))}
+        </div>
       </section>
 
       {retired.length > 0 ? (
         <section className="flex flex-col gap-[14px]">
-          <h2 className="m-0 eyebrow text-ink-60">
-            Retired
-          </h2>
+          <h2 className="m-0 eyebrow text-ink-60">Retired</h2>
           {retired.map((situation) => (
             <form
               key={situation.id}
               action={restoreSituation}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-card shadow-hairline bg-surface-subtle p-5"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface-subtle p-5 shadow-hairline"
             >
               <input type="hidden" name="id" value={situation.id} />
               <div className="flex flex-col gap-1">
