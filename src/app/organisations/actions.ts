@@ -15,27 +15,70 @@ function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+/**
+ * Turn a provider failure into something an admin can act on.
+ *
+ * A 403 from Resend is nearly always an unverified sending domain, and while
+ * it is unverified the only address it will deliver to is the account
+ * owner. That reads from here like a bad recipient, which sends the admin
+ * off to check a perfectly good address.
+ */
+function describeSendFailure(raw: string | undefined): string {
+  const detail = raw ?? "";
+
+  if (detail.includes("RESEND_API_KEY") || detail.includes("EMAIL_FROM"))
+    return "email is not configured on this deployment";
+  if (detail.includes("reserved address"))
+    return "their address is on a reserved testing domain and cannot receive email";
+  if (detail.includes("403"))
+    return "our email provider refused it, which usually means the sending domain is not verified yet";
+  if (detail.includes("429")) return "we are being rate limited by the email provider";
+  if (detail.includes("422")) return "the email provider would not accept their address";
+
+  return detail || "no reason came back";
+}
+
 function portalUrl() {
   return process.env.ORG_PORTAL_URL ?? "";
 }
 
-/** Same rule as the review queue: the decision stands even if the email does not. */
+/**
+ * Same rule as the review queue: the decision stands even if the email does
+ * not. What changed is that a failure now says why.
+ *
+ * It used to return a bare false and swallow the reason in a catch, so a
+ * decision that never reached anyone looked the same as one that did, and the
+ * cause was not recorded anywhere. An organisation waiting on an instruction
+ * it was never sent is the worst version of this screen.
+ */
 async function notify(
   organisationId: string,
   message: { subject: string; html: string; text: string },
-): Promise<boolean> {
+): Promise<{ ok: boolean; reason?: string }> {
   try {
     const addresses = await getOrganisationEmails(organisationId);
-    if (addresses.length === 0) return false;
+
+    if (addresses.length === 0) {
+      return { ok: false, reason: "That organisation has no member we can email." };
+    }
 
     let delivered = false;
+    let lastError: string | undefined;
+
     for (const address of addresses) {
       const result = await sendEmail({ to: address, ...message });
       if (result.ok) delivered = true;
+      else lastError = result.error;
     }
-    return delivered;
-  } catch {
-    return false;
+
+    if (delivered) return { ok: true };
+
+    console.error("verification decision email failed", lastError);
+    return { ok: false, reason: describeSendFailure(lastError) };
+  } catch (thrown) {
+    const reason = thrown instanceof Error ? thrown.message : String(thrown);
+    console.error("verification decision email threw", thrown);
+    return { ok: false, reason };
   }
 }
 
@@ -75,7 +118,11 @@ export async function markVerified(formData: FormData) {
   );
 
   revalidatePath(LIST);
-  redirect(told ? LIST : `${LIST}?notified=failed`);
+  redirect(
+    told.ok
+      ? LIST
+      : `${LIST}?notified=failed&why=${encodeURIComponent(told.reason ?? "")}`,
+  );
 }
 
 /**
@@ -112,7 +159,11 @@ export async function askForEvidence(formData: FormData) {
   );
 
   revalidatePath(LIST);
-  redirect(told ? LIST : `${LIST}?notified=failed`);
+  redirect(
+    told.ok
+      ? LIST
+      : `${LIST}?notified=failed&why=${encodeURIComponent(told.reason ?? "")}`,
+  );
 }
 
 /**
@@ -151,5 +202,9 @@ export async function markRejected(formData: FormData) {
   );
 
   revalidatePath(LIST);
-  redirect(told ? LIST : `${LIST}?notified=failed`);
+  redirect(
+    told.ok
+      ? LIST
+      : `${LIST}?notified=failed&why=${encodeURIComponent(told.reason ?? "")}`,
+  );
 }

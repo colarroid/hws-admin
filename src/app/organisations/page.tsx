@@ -35,10 +35,10 @@ export const metadata: Metadata = { title: "Verify organisations" };
 export default async function OrganisationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notified?: string; tab?: string }>;
+  searchParams: Promise<{ notified?: string; tab?: string; why?: string }>;
 }) {
   await requireAdmin();
-  const { notified, tab: rawTab } = await searchParams;
+  const { notified, tab: rawTab, why } = await searchParams;
   const all = await getOrganisationsToVerify();
 
   // Waiting first, because that is the work. The other tabs are for looking
@@ -61,9 +61,21 @@ export default async function OrganisationsPage({
       </div>
 
       {notified === "failed" ? (
-        <div className="rounded-card border border-red-200 bg-red-50 px-[22px] py-5 text-[16px] leading-[1.5] text-red-700">
-          <strong>The decision saved, but we could not email them.</strong> They
-          will not know until they open their dashboard.
+        <div
+          role="alert"
+          className="flex flex-col gap-1 rounded-card border border-red-200 bg-red-50 px-[22px] py-5 text-[16px] leading-[1.5] text-red-700"
+        >
+          <strong>The decision saved, but we could not email them.</strong>
+          {/* The reason, not just the fact. An organisation waiting on an
+              instruction nobody sent is the worst outcome this screen has,
+              and it used to be indistinguishable from a delivered one. */}
+          <span>
+            {why
+              ? `${why.charAt(0).toUpperCase()}${why.slice(1)}.`
+              : "No reason came back."}{" "}
+            They will not know until they open their dashboard, so tell them
+            another way if it matters.
+          </span>
         </div>
       ) : null}
 
