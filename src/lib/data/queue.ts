@@ -6,8 +6,6 @@ export type QueueItem = {
   name: string;
   organisationName: string;
   submittedAt: string | null;
-  /** Whole days since it was submitted. Computed here, not during render. */
-  waitedDays: number;
   status: string;
   /** Set when an admin has taken it down from every woman-facing surface. */
   hiddenAt: string | null;
@@ -26,6 +24,9 @@ export type ReviewListing = {
   deadline: string | null;
   apply_url: string | null;
   status: string;
+  /** Set when an admin has hidden it from every woman-facing surface. */
+  hiddenAt: string | null;
+  hiddenReason: string | null;
   organisationId: string;
   organisationName: string;
   organisationStatus: string;
@@ -79,11 +80,6 @@ export async function getQueue(): Promise<QueueItem[]> {
     }
   }
 
-  // One clock read for the whole queue, so every age on the screen is
-  // measured from the same moment.
-  const now = Date.now();
-  const DAY = 24 * 60 * 60 * 1000;
-
   return rows
     .map((row) => {
       const submittedAt = submitted.get(row.id) ?? row.created_at;
@@ -92,7 +88,6 @@ export async function getQueue(): Promise<QueueItem[]> {
         name: row.name,
         organisationName: row.organisations?.name ?? "",
         submittedAt,
-        waitedDays: Math.floor((now - new Date(submittedAt).getTime()) / DAY),
         status: row.status,
         hiddenAt: row.hidden_at,
       };
@@ -115,7 +110,7 @@ export async function getReviewListing(
     .from("listings")
     .select(
       `id, name, kind, blurb, who_for, what_to_expect, cost, formats, place,
-       deadline, apply_url, status, organisation_id,
+       deadline, apply_url, status, hidden_at, hidden_reason, organisation_id,
        organisations ( name, status ),
        listing_situations ( situation_id )`,
     )
@@ -145,6 +140,8 @@ export async function getReviewListing(
     deadline: row.deadline,
     apply_url: row.apply_url,
     status: row.status,
+    hiddenAt: row.hidden_at,
+    hiddenReason: row.hidden_reason,
     organisationId: row.organisation_id,
     organisationName: row.organisations?.name ?? "",
     organisationStatus: row.organisations?.status ?? "pending",

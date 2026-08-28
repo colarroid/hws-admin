@@ -22,13 +22,8 @@ export const metadata: Metadata = { title: "Published listings" };
  * moderates rather than approves, and anything already hidden sorts to the
  * top because it is the only state somebody chose.
  */
-export default async function QueuePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ notified?: string }>;
-}) {
+export default async function QueuePage() {
   await requireAdmin();
-  const { notified } = await searchParams;
   const queue = await getQueue();
 
   return (
@@ -44,19 +39,18 @@ export default async function QueuePage({
         </p>
       </div>
 
-      {notified === "failed" ? (
-        <div className="rounded-card border border-red-200 bg-red-50 px-[22px] py-5 text-[16px] leading-[1.5] text-red-700">
-          <strong>The decision saved, but we could not email the organisation.</strong>{" "}
-          They will not know until they open their dashboard, so tell them
-          another way if it matters.
-        </div>
-      ) : null}
-
       <div className="flex flex-col gap-[14px]">
         {queue.map((item) => {
-          const waited = item.waitedDays;
-          // Two working days is the promise made on the portal.
-          const overdue = waited >= 2;
+          // Hidden is a decision somebody made, so it outranks the listing's
+          // own state: a hidden listing is still `live` in the database, and a
+          // green "Live" pill on something no woman can reach reads as a bug.
+          const state = item.hiddenAt
+            ? { className: "bg-red-50 text-red-700", label: "Hidden from women" }
+            : item.status === "closed"
+              ? { className: "bg-closed text-ink-65", label: "Closed" }
+              : item.status === "live"
+                ? { className: "bg-sage-200 text-green-700", label: "Live" }
+                : { className: "bg-gold-200 text-gold-700", label: "In review" };
 
           return (
             <Link
@@ -74,19 +68,9 @@ export default async function QueuePage({
               </div>
               <div className="flex flex-col items-end gap-1">
                 <span
-                  className={`rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${
-                    item.hiddenAt
-                      ? "bg-red-50 text-red-700"
-                      : overdue
-                        ? "bg-closed text-ink-65"
-                        : "bg-sage-200 text-green-700"
-                  }`}
+                  className={`rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${state.className}`}
                 >
-                  {item.hiddenAt
-                    ? "Hidden from women"
-                    : item.status === "closed"
-                      ? "Closed"
-                      : "Live"}
+                  {state.label}
                 </span>
                 <span className="text-[14px] text-ink-60">
                   {item.submittedAt ? DATE.format(new Date(item.submittedAt)) : ""}

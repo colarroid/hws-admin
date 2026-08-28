@@ -6,16 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisationEmails, getReviewListing } from "@/lib/data/queue";
 import { sendEmail } from "@/lib/email";
-import { listingPublished, changesNeeded } from "@/emails/listing-decision";
-
-const EDITABLE = ["name", "blurb", "who_for", "what_to_expect"] as const;
-
-const FIELD_LABELS: Record<string, string> = {
-  name: "the name",
-  blurb: "what it does",
-  who_for: "who it is for",
-  what_to_expect: "what to expect",
-};
+import { listingHidden, listingRestored } from "@/emails/listing-decision";
 
 function portalUrl() {
   return process.env.ORG_PORTAL_URL ?? "";
@@ -24,10 +15,11 @@ function portalUrl() {
 /**
  * Tell the organisation, without letting that failure undo the decision.
  *
- * The review is the work; the email is a courtesy. If it does not go, the
- * listing is still published and the reviewer needs to know the message did
+ * The takedown is the work; the email is how they find out. If it does not
+ * go, the listing is still hidden and the admin needs to know the message did
  * not arrive, not be shown a server error for something that succeeded and
- * invited to do it twice.
+ * invited to do it twice. The portal shows the same thing either way, so a
+ * lost email delays the news rather than losing it.
  */
 async function notify(
   organisationId: string,
@@ -49,130 +41,6 @@ async function notify(
 }
 
 /**
- * Approve, publishing the listing.
- *
- * Any wording the reviewer changed is written into the audit trail as a
- * before and after, and named in the email. Screen 12 of the portal promises
- * exactly that, and an unrecorded edit makes the promise a lie the next time
- * anyone checks.
- *
- * last_confirmed_at is stamped here because publishing *is* the first
- * confirmation. Leaving it null would make a brand new listing count as stale
- * the moment it goes live.
- */
-export async function approve(formData: FormData) {
-  const admin = await requireAdmin();
-  const id = String(formData.get("listingId"));
-
-  const listing = await getReviewListing(id);
-  if (!listing) redirect("/queue");
-
-  const supabase = await createClient();
-
-  const changes: Record<string, { from: string; to: string }> = {};
-  const updates: Record<string, string> = {};
-
-  for (const field of EDITABLE) {
-    const submitted = String(formData.get(field) ?? "").trim();
-    const original = (listing[field] ?? "").trim();
-    if (submitted !== original) {
-      changes[field] = { from: original, to: submitted };
-      updates[field] = submitted;
-    }
-  }
-
-  const now = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("listings")
-    .update({
-      ...updates,
-      status: "live",
-      published_at: now,
-      last_confirmed_at: now,
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(`Could not publish: ${error.message}`);
-
-  const edited = Object.keys(changes).length > 0;
-
-  if (edited) {
-    await supabase.from("listing_reviews").insert({
-      listing_id: id,
-      actor_id: admin.id,
-      action: "edited",
-      note: "Wording edited for clarity during review.",
-      changes,
-    });
-  }
-
-  await supabase.from("listing_reviews").insert({
-    listing_id: id,
-    actor_id: admin.id,
-    action: "approved",
-  });
-
-  const told = await notify(
-    listing.organisationId,
-    listingPublished(
-      updates.name ?? listing.name,
-      `${portalUrl()}/dashboard`,
-      Object.keys(changes).map((field) => FIELD_LABELS[field] ?? field),
-    ),
-  );
-
-  revalidatePath("/queue");
-  redirect(told ? "/queue" : "/queue?notified=failed");
-}
-
-/**
- * Send it back with one thing to fix.
- *
- * The note is required. "Needs changes" with no reason turns a two-day
- * promise into an unbounded loop, and the organisation has no way to guess
- * what to do.
- */
-export async function requestChanges(formData: FormData) {
-  const admin = await requireAdmin();
-  const id = String(formData.get("listingId"));
-  const note = String(formData.get("note") ?? "").trim();
-
-  if (!note) redirect(`/queue/${id}?error=note`);
-
-  const listing = await getReviewListing(id);
-  if (!listing) redirect("/queue");
-
-  const supabase = await createClient();
-
-  const { error: auditError } = await supabase.from("listing_reviews").insert({
-    listing_id: id,
-    actor_id: admin.id,
-    action: "changes_requested",
-    note,
-  });
-
-  if (auditError) {
-    throw new Error(`Could not record the decision: ${auditError.message}`);
-  }
-
-  const { error } = await supabase
-    .from("listings")
-    .update({ status: "changes_requested" })
-    .eq("id", id);
-
-  if (error) throw new Error(`Could not update the listing: ${error.message}`);
-
-  const told = await notify(
-    listing.organisationId,
-    changesNeeded(listing.name, note, `${portalUrl()}/dashboard`),
-  );
-
-  revalidatePath("/queue");
-  redirect(told ? "/queue" : "/queue?notified=failed");
-}
-
-/**
  * Take a listing down from every woman-facing surface.
  *
  * A hide, not a delete. Nothing an organisation wrote is destroyed, the
@@ -184,19 +52,24 @@ export async function requestChanges(formData: FormData) {
  * directly. This is what replaces that, and it runs after the fact.
  */
 export async function hideListing(formData: FormData) {
-  const listingId = String(formData.get("listingId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
-  if (!listingId) return;
+  // The form marks the reason required, but the action is its own endpoint
+  // and a takedown nobody can explain is the thing this is meant to prevent.
+  if (!listingId || !reason) return;
 
   const admin = await requireAdmin();
   const supabase = await createClient();
+
+  const listing = await getReviewListing(listingId);
+  if (!listing) return;
 
   const { error } = await supabase
     .from("listings")
     .update({
       hidden_at: new Date().toISOString(),
       hidden_by: admin.id,
-      hidden_reason: reason || null,
+      hidden_reason: reason,
     })
     .eq("id", listingId);
 
@@ -208,19 +81,29 @@ export async function hideListing(formData: FormData) {
     listing_id: listingId,
     actor_id: admin.id,
     action: "hidden",
-    changes: reason ? { reason } : null,
+    changes: { reason },
   });
 
+  const told = await notify(
+    listing.organisationId,
+    listingHidden(listing.name, reason, portalUrl() + "/solutions"),
+  );
+
   revalidatePath("/queue");
+  revalidatePath("/queue/" + listingId);
+  redirect(told ? "/queue/" + listingId : "/queue/" + listingId + "?notified=failed");
 }
 
 /** Put it back. */
 export async function unhideListing(formData: FormData) {
-  const listingId = String(formData.get("listingId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "").trim();
   if (!listingId) return;
 
   const admin = await requireAdmin();
   const supabase = await createClient();
+
+  const listing = await getReviewListing(listingId);
+  if (!listing) return;
 
   const { error } = await supabase
     .from("listings")
@@ -235,5 +118,12 @@ export async function unhideListing(formData: FormData) {
     action: "unhidden",
   });
 
+  const told = await notify(
+    listing.organisationId,
+    listingRestored(listing.name, portalUrl() + "/solutions"),
+  );
+
   revalidatePath("/queue");
+  revalidatePath("/queue/" + listingId);
+  redirect(told ? "/queue/" + listingId : "/queue/" + listingId + "?notified=failed");
 }

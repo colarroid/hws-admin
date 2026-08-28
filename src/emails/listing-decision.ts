@@ -7,97 +7,74 @@ import {
 } from "@/emails/layout";
 
 /**
- * What an organisation is told about one of its listings.
+ * What an organisation is told when one of its listings is moderated.
  *
- * Listings publish without waiting for a reviewer now, so `listingPublished`
- * is a moderation outcome rather than an approval: it is sent when an admin
- * has edited wording, which screen 12 of the portal promises never happens
- * silently. `changesNeeded` remains the way to ask for a fix.
+ * Nothing here is an approval. A verified organisation publishes directly, so
+ * the only decision an admin makes about a live listing is whether it should
+ * stop being shown, and these two emails are the two sides of that.
+ *
+ * The reason is quoted rather than folded into a sentence. It is the part the
+ * organisation has to act on, and it has to survive being skimmed.
+ *
+ * Both ask for a reply, which is why the admin deployment sends from a real
+ * mailbox rather than a noreply address.
  */
 
-export function listingPublished(
+export function listingHidden(
   listingName: string,
+  reason: string,
   dashboardUrl: string,
-  edits: string[],
 ) {
-  const edited = edits.length > 0;
-
-  const subject = `${listingName} is now live`;
+  const subject = `${listingName} is not showing to women at the moment`;
 
   const text = [
-    `${listingName} has been checked and is now showing to women searching.`,
+    `We have taken ${listingName} down while something is sorted. Women`,
+    "searching will not see it until it goes back up.",
     "",
-    ...(edited
-      ? [
-          "We edited some wording for clarity before publishing:",
-          ...edits.map((field) => `  - ${field}`),
-          "",
-          "If any of that reads wrong, edit it on your dashboard and it will",
-          "come back to us.",
-          "",
-        ]
-      : []),
+    reason,
+    "",
+    "Nothing is lost. The listing is still on your dashboard exactly as you",
+    "wrote it. Edit it and reply to this email, and we will put it back.",
+    "",
     `Your dashboard: ${dashboardUrl}`,
   ].join("\n");
 
   const html = emailLayout({
-    preheader: edited
-      ? "Live, with a note about wording we changed."
-      : "It is showing to women searching now.",
-    heading: `${listingName} is live`,
+    preheader: "We have taken it down while something is sorted.",
+    heading: `${listingName} is not showing at the moment`,
     body:
       emailText(
-        `<strong>${escapeHtml(listingName)}</strong> has been checked and is now showing to women searching.`,
+        `We have taken <strong>${escapeHtml(listingName)}</strong> down while something is sorted. Women searching will not see it until it goes back up.`,
       ) +
-      (edited
-        ? emailText(
-            "We edited some wording for clarity. Nothing about what you offer has changed, only how it reads:",
-            "muted",
-          ) +
-          emailQuote(edits.join("\n")) +
-          emailText(
-            "If any of that reads wrong, edit it on your dashboard and it comes straight back to us.",
-            "muted",
-          )
-        : "") +
+      emailQuote(reason) +
+      emailText(
+        "Nothing is lost. The listing is still on your dashboard exactly as you wrote it. Edit it and reply to this email, and we will put it back.",
+        "muted",
+      ) +
       emailButton("Open your dashboard", dashboardUrl),
   });
 
   return { subject, text, html };
 }
 
-export function changesNeeded(
-  listingName: string,
-  note: string,
-  dashboardUrl: string,
-) {
-  const subject = `${listingName} needs a small change`;
+export function listingRestored(listingName: string, dashboardUrl: string) {
+  const subject = `${listingName} is showing again`;
 
   const text = [
-    `We read ${listingName} and it is nearly there. One thing to sort before`,
-    "it can go live:",
+    `${listingName} is back in front of women searching.`,
     "",
-    note,
-    "",
-    "Edit it on your dashboard and it comes straight back to us. We usually",
-    "look again within two working days.",
+    "Thank you for sorting it.",
     "",
     `Your dashboard: ${dashboardUrl}`,
   ].join("\n");
 
   const html = emailLayout({
-    preheader: "One thing to sort before it can go live.",
-    heading: `${listingName} needs a small change`,
+    preheader: "It is back in front of women searching.",
+    heading: `${listingName} is showing again`,
     body:
       emailText(
-        `We read <strong>${escapeHtml(listingName)}</strong> and it is nearly there. One thing to sort before it can go live.`,
-      ) +
-      emailQuote(note) +
-      emailText(
-        "Edit it on your dashboard and it comes straight back to us. We usually look again within two working days.",
-        "muted",
-      ) +
-      emailButton("Edit the listing", dashboardUrl),
+        `<strong>${escapeHtml(listingName)}</strong> is back in front of women searching. Thank you for sorting it.`,
+      ) + emailButton("Open your dashboard", dashboardUrl),
   });
 
   return { subject, text, html };
