@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Playfair_Display, Inter } from "next/font/google";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getAdmin } from "@/lib/data/admin";
 import "./globals.css";
 
@@ -43,30 +44,40 @@ export default async function RootLayout({
   return (
     <html lang="en-GB" className={`${playfair.variable} ${inter.variable}`}>
       <body>
-        <div className="flex min-h-screen flex-col bg-ground text-ink">
-          {admin ? (
-          <header className="sticky top-0 z-20 border-b border-hairline bg-ground">
-            {/* relative so the mobile panel can hang off the bottom edge */}
-            <div className="relative flex w-full items-center gap-[14px] px-5 py-[18px] sm:px-8 lg:px-10">
-              {/* Not a link, matching what was here before: the admin tools
-                  have no public front page to return to. So the name lives on
-                  alt rather than on a wrapper. */}
-              <Image
-                src="/logo.svg"
-                alt="HWS Pathgrid"
-                width={100}
-                height={36}
-                priority
-                className="shrink-0"
-                // Served as authored. The image optimiser does not process
-                // SVG, and there is nothing to gain from it on a 5KB vector.
-                unoptimized
-              />
-              <div className="ml-auto flex items-center"><AdminNav /></div>
-            </div>
-          </header>
-          ) : null}
-          <main className="flex flex-1 flex-col">{children}</main>
+        <div className="flex min-h-screen bg-ground text-ink">
+          {admin ? <AdminSidebar /> : null}
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            {/* The rail carries navigation on a desktop, so the header exists
+                only below that breakpoint, where it holds the same places in
+                the menu panel. Signed out there is no header at all: nothing
+                is reachable except sign-in, which carries its own mark. */}
+            {admin ? (
+              <header className="sticky top-0 z-20 border-b border-hairline bg-ground lg:hidden">
+                {/* relative so the mobile panel can hang off the bottom edge */}
+                <div className="relative flex w-full items-center gap-[14px] px-5 py-[18px] sm:px-8">
+                  {/* Not a link: the admin tools have no public front page to
+                      return to, so the name lives on alt rather than on a
+                      wrapper. */}
+                  <Image
+                    src="/logo.svg"
+                    alt="HWS Pathgrid"
+                    width={100}
+                    height={36}
+                    priority
+                    className="shrink-0"
+                    // Served as authored. The image optimiser does not process
+                    // SVG, and there is nothing to gain from it on a 5KB vector.
+                    unoptimized
+                  />
+                  <div className="ml-auto flex items-center">
+                    <AdminNav />
+                  </div>
+                </div>
+              </header>
+            ) : null}
+            <main className="flex flex-1 flex-col">{children}</main>
+          </div>
         </div>
       </body>
     </html>
