@@ -1,19 +1,20 @@
-import { EyeOff, Eye, TriangleAlert } from "lucide-react";
+import { Eye, EyeOff, Flag, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { hideListing, unhideListing } from "@/app/queue/actions";
-import type { ReviewListing } from "@/lib/data/queue";
+import { hideListing, unhideListing } from "@/app/listings/actions";
+import type { ReviewListing } from "@/lib/data/moderation";
 
 /**
  * What an admin can do to a listing after it is published.
  *
  * Nothing is approved here any more. A verified organisation publishes
  * directly, so the only decision left is whether something already live
- * should stop being shown, and that is a hide rather than a delete: the
- * organisation keeps everything it wrote, sees the reason, and can fix it.
+ * should stop being shown. Flagging is what does that, and it is a hide
+ * rather than a delete: the organisation keeps everything it wrote, sees the
+ * reason, and can fix it.
  *
- * The reason is required. A listing that disappears with no explanation is
- * indistinguishable from a bug, and the organisation would have nothing to
- * act on.
+ * The reason is required, and it is the organisation's copy of why. A listing
+ * that disappears with no explanation is indistinguishable from a bug, and
+ * leaves them nothing to act on.
  */
 export function ModerationForm({ listing }: { listing: ReviewListing }) {
   const hidden = Boolean(listing.hiddenAt);
@@ -30,11 +31,11 @@ export function ModerationForm({ listing }: { listing: ReviewListing }) {
           />
           <div className="flex flex-col gap-1">
             <span className="text-[17px] font-bold text-red-700">
-              Hidden from women
+              Flagged and hidden from women
             </span>
             <span className="text-[15px] leading-[1.6] text-red-700">
               It is gone from search and from its own page. The organisation
-              still sees it, with the reason below.
+              sees it with the reason below.
             </span>
           </div>
         </div>
@@ -49,7 +50,7 @@ export function ModerationForm({ listing }: { listing: ReviewListing }) {
           <input type="hidden" name="listingId" value={listing.id} />
           <Button type="submit" variant="secondary" size="inline">
             <Eye size={16} strokeWidth={2} aria-hidden="true" />
-            Show it again
+            Unflag and show it again
           </Button>
         </form>
       </div>
@@ -64,17 +65,19 @@ export function ModerationForm({ listing }: { listing: ReviewListing }) {
       <input type="hidden" name="listingId" value={listing.id} />
 
       <div className="flex flex-col gap-1">
-        <span className="text-[17px] font-bold">Hide this from women</span>
+        <span className="text-[17px] font-bold">
+          Something wrong with this listing?
+        </span>
         <span className="max-w-[62ch] text-[15px] leading-[1.6] text-ink-70">
-          It stops appearing in search and its own page stops resolving.
-          Nothing is deleted: the organisation keeps the listing and sees why,
-          so they can fix it and you can show it again.
+          Flagging hides it from women. It stops appearing in search and its
+          own page stops resolving. Nothing is deleted: the organisation keeps
+          the listing and sees why, so they can fix it and you can restore it.
         </span>
       </div>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="reason" className="text-[15px] font-semibold">
-          Why, in their words
+          Why you are flagging it
         </label>
         <textarea
           id="reason"
@@ -91,8 +94,7 @@ export function ModerationForm({ listing }: { listing: ReviewListing }) {
             className="mt-[3px] shrink-0"
             aria-hidden="true"
           />
-          This is shown to the organisation. A listing that vanishes with no
-          reason reads as a bug rather than a decision.
+          The organisation would see the reason why this is flagged.
         </span>
       </div>
 
@@ -102,8 +104,8 @@ export function ModerationForm({ listing }: { listing: ReviewListing }) {
         size="inline"
         className="self-start"
       >
-        <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
-        Hide from women
+        <Flag size={16} strokeWidth={2} aria-hidden="true" />
+        Flag this content
       </Button>
     </form>
   );

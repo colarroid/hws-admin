@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisation } from "@/lib/data/organisations";
-import { getOrganisationEmails } from "@/lib/data/queue";
+import { getOrganisationEmails } from "@/lib/data/moderation";
 import { sendEmail } from "@/lib/email";
 import { verified, moreEvidence, rejected } from "@/emails/verification-decision";
 

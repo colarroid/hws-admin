@@ -6,7 +6,7 @@ import { Page } from "@/components/ui/Page";
 import { ResultCard, type ResultCardData } from "@/components/ResultCard";
 import { ModerationForm } from "@/components/admin/ModerationForm";
 import { requireAdmin } from "@/lib/data/admin";
-import { getReviewListing } from "@/lib/data/queue";
+import { getReviewListing } from "@/lib/data/moderation";
 import { COSTS, FORMATS, SOLUTION_KINDS, labelFor } from "@/lib/design/taxonomy";
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
@@ -59,7 +59,7 @@ export default async function ReviewPage({
   return (
     <Page width={820} top={56} gap={26}>
       <Link
-        href="/queue"
+        href="/listings"
         className="inline-flex min-h-[44px] items-center gap-[6px] self-start text-[14px] font-bold text-ink no-underline"
       >
         <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" />

@@ -19,7 +19,7 @@ export function AdminSidebar() {
     <aside className="hidden w-[248px] shrink-0 border-r border-ink bg-ink lg:block">
       <div className="sticky top-0 flex h-screen flex-col px-5 py-6">
         <Link
-          href="/queue"
+          href="/listings"
           aria-label="HWS Pathgrid admin, listings"
           className="mb-7 flex shrink-0 items-center no-underline"
         >

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/data/admin";
-import { getOrganisationEmails, getReviewListing } from "@/lib/data/queue";
+import { getOrganisationEmails, getReviewListing } from "@/lib/data/moderation";
 import { sendEmail } from "@/lib/email";
 import { listingHidden, listingRestored } from "@/emails/listing-decision";
 
@@ -89,9 +89,9 @@ export async function hideListing(formData: FormData) {
     listingHidden(listing.name, reason, portalUrl() + "/solutions"),
   );
 
-  revalidatePath("/queue");
-  revalidatePath("/queue/" + listingId);
-  redirect(told ? "/queue/" + listingId : "/queue/" + listingId + "?notified=failed");
+  revalidatePath("/listings");
+  revalidatePath("/listings/" + listingId);
+  redirect(told ? "/listings/" + listingId : "/listings/" + listingId + "?notified=failed");
 }
 
 /** Put it back. */
@@ -123,7 +123,7 @@ export async function unhideListing(formData: FormData) {
     listingRestored(listing.name, portalUrl() + "/solutions"),
   );
 
-  revalidatePath("/queue");
-  revalidatePath("/queue/" + listingId);
-  redirect(told ? "/queue/" + listingId : "/queue/" + listingId + "?notified=failed");
+  revalidatePath("/listings");
+  revalidatePath("/listings/" + listingId);
+  redirect(told ? "/listings/" + listingId : "/listings/" + listingId + "?notified=failed");
 }

@@ -33,22 +33,92 @@ export type ReviewListing = {
   situationCount: number;
 };
 
+/** Enough to scan without scrolling forever, few enough to stay one query. */
+export const PER_PAGE = 25;
+
+export type ListingsPage = {
+  items: QueueItem[];
+  /** Matching the current search, not the whole table. */
+  total: number;
+  page: number;
+  pageCount: number;
+};
+
 /**
- * Everything published, newest first.
+ * The search term, made safe to interpolate.
+ *
+ * PostgREST parses its filters out of the query string, so a comma or a
+ * bracket in a search box is a syntax error at best and someone else's filter
+ * at worst. `%` and `_` are LIKE wildcards, which would let a search match
+ * things it does not look like it should. None of them are worth supporting
+ * in a name search, so they are dropped rather than escaped.
+ */
+function safeTerm(raw: string) {
+  return raw
+    .replace(/[,.()*\%_"']/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
+/**
+ * Everything published, newest first, one page at a time.
  *
  * This was a queue of listings waiting for approval. Nothing waits any more:
  * a verified organisation publishes directly, and this is where an admin
- * moderates afterwards. Newest first, because the thing most likely to need
- * looking at is the thing that just appeared.
+ * moderates afterwards.
+ *
+ * Hidden listings sort to the top. It is the only state on this screen that
+ * someone decided to put a listing into, so it is the one worth seeing
+ * without paging. The sort is in SQL rather than in JS because with paging a
+ * JS sort would only order the page it was handed.
  */
-export async function getQueue(): Promise<QueueItem[]> {
+export async function getQueue({
+  q = "",
+  page = 1,
+}: { q?: string; page?: number } = {}): Promise<ListingsPage> {
   const supabase = await createClient();
+  const term = safeTerm(q);
 
-  const { data } = await supabase
+  // The organisation name is on a joined table, and PostgREST cannot put a
+  // joined column inside a top-level `or`. Resolving the ids first is one
+  // extra round trip and it keeps the search matching what the screen shows:
+  // a listing's own name, or the name of who posted it.
+  let orgIds: string[] = [];
+  if (term) {
+    const { data } = await supabase
+      .from("organisations")
+      .select("id")
+      .ilike("name", `%${term}%`);
+    orgIds = (data ?? []).map((row) => row.id);
+  }
+
+  let query = supabase
     .from("listings")
-    .select("id, name, status, hidden_at, created_at, organisations ( name )")
-    .in("status", ["live", "closed", "in_review"])
-    .order("created_at", { ascending: false });
+    .select("id, name, status, hidden_at, created_at, organisations ( name )", {
+      count: "exact",
+    })
+    .in("status", ["live", "closed", "in_review"]);
+
+  if (term) {
+    query =
+      orgIds.length > 0
+        ? query.or(`name.ilike.%${term}%,organisation_id.in.(${orgIds.join(",")})`)
+        : query.ilike("name", `%${term}%`);
+  }
+
+  const current = Math.max(1, Math.floor(page) || 1);
+  const from = (current - 1) * PER_PAGE;
+
+  const { data, error, count } = await query
+    // Non-null first, which is hidden first.
+    .order("hidden_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .range(from, from + PER_PAGE - 1);
+
+  // Not swallowed. A failed query and an empty table look identical on the
+  // screen otherwise, and "nothing posted yet" is the most reassuring thing
+  // a broken moderation screen could possibly say.
+  if (error) throw error;
 
   type Row = {
     id: string;
@@ -60,8 +130,10 @@ export async function getQueue(): Promise<QueueItem[]> {
   };
 
   const rows = (data ?? []) as unknown as Row[];
+  const total = count ?? rows.length;
 
-  // When it was submitted, rather than when the draft was started.
+  // When it was submitted, rather than when the draft was started. Only for
+  // the rows on this page, so the cost does not grow with the table.
   const ids = rows.map((r) => r.id);
   const submitted = new Map<string, string>();
 
@@ -80,25 +152,19 @@ export async function getQueue(): Promise<QueueItem[]> {
     }
   }
 
-  return rows
-    .map((row) => {
-      const submittedAt = submitted.get(row.id) ?? row.created_at;
-      return {
-        id: row.id,
-        name: row.name,
-        organisationName: row.organisations?.name ?? "",
-        submittedAt,
-        status: row.status,
-        hiddenAt: row.hidden_at,
-      };
-    })
-    // Hidden first: it is the only state on this screen that someone decided
-    // to put a listing into, so it is the one worth seeing without scrolling.
-    .sort(
-      (a, b) =>
-        Number(Boolean(b.hiddenAt)) - Number(Boolean(a.hiddenAt)) ||
-        (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""),
-    );
+  return {
+    items: rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      organisationName: row.organisations?.name ?? "",
+      submittedAt: submitted.get(row.id) ?? row.created_at,
+      status: row.status,
+      hiddenAt: row.hidden_at,
+    })),
+    total,
+    page: current,
+    pageCount: Math.max(1, Math.ceil(total / PER_PAGE)),
+  };
 }
 
 export async function getReviewListing(
@@ -106,7 +172,7 @@ export async function getReviewListing(
 ): Promise<ReviewListing | null> {
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("listings")
     .select(
       `id, name, kind, blurb, who_for, what_to_expect, cost, formats, place,
@@ -117,6 +183,7 @@ export async function getReviewListing(
     .eq("id", id)
     .maybeSingle();
 
+  if (error) throw error;
   if (!data) return null;
 
   type Row = typeof data & {

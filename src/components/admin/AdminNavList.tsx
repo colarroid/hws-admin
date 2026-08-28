@@ -19,7 +19,7 @@ import { signOut } from "@/app/actions";
  * rail is near-black, the panel is the white sheet every other menu uses.
  */
 const ITEMS = [
-  { href: "/queue", label: "Listings", icon: Rows3 },
+  { href: "/listings", label: "Listings", icon: Rows3 },
   { href: "/organisations", label: "Organisations", icon: BadgeCheck },
   { href: "/taxonomy/zones", label: "Access Zones", icon: Building2 },
   { href: "/taxonomy/situations", label: "Situations", icon: Tags },

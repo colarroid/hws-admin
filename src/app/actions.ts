@@ -59,7 +59,7 @@ export async function signIn(
     return denied;
   }
 
-  redirect("/queue");
+  redirect("/listings");
 }
 
 export async function signOut() {
