@@ -171,3 +171,69 @@ export async function requestChanges(formData: FormData) {
   revalidatePath("/queue");
   redirect(told ? "/queue" : "/queue?notified=failed");
 }
+
+/**
+ * Take a listing down from every woman-facing surface.
+ *
+ * A hide, not a delete. Nothing an organisation wrote is destroyed, the
+ * listing stays in their own dashboard with the reason attached, and a
+ * takedown that can be explained is one they can act on. The two public
+ * views filter on `hidden_at`, so this is the whole mechanism.
+ *
+ * Admins do not approve listings any more: a verified organisation publishes
+ * directly. This is what replaces that, and it runs after the fact.
+ */
+export async function hideListing(formData: FormData) {
+  const listingId = String(formData.get("listingId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!listingId) return;
+
+  const admin = await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      hidden_at: new Date().toISOString(),
+      hidden_by: admin.id,
+      hidden_reason: reason || null,
+    })
+    .eq("id", listingId);
+
+  if (error) throw new Error(`Could not hide the listing: ${error.message}`);
+
+  // Append-only, like every other review action, so a takedown is on the
+  // record rather than only in the listing's current state.
+  await supabase.from("listing_reviews").insert({
+    listing_id: listingId,
+    actor_id: admin.id,
+    action: "hidden",
+    changes: reason ? { reason } : null,
+  });
+
+  revalidatePath("/queue");
+}
+
+/** Put it back. */
+export async function unhideListing(formData: FormData) {
+  const listingId = String(formData.get("listingId") ?? "");
+  if (!listingId) return;
+
+  const admin = await requireAdmin();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("listings")
+    .update({ hidden_at: null, hidden_by: null, hidden_reason: null })
+    .eq("id", listingId);
+
+  if (error) throw new Error(`Could not restore the listing: ${error.message}`);
+
+  await supabase.from("listing_reviews").insert({
+    listing_id: listingId,
+    actor_id: admin.id,
+    action: "unhidden",
+  });
+
+  revalidatePath("/queue");
+}

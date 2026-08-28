@@ -63,7 +63,7 @@ export default async function ReviewPage({
         className="inline-flex min-h-[44px] items-center gap-[6px] self-start text-[14px] font-bold text-ink no-underline"
       >
         <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" />
-        Review queue
+        Published listings
       </Link>
 
       {/* Verification gates publishing, not drafting. An organisation can

@@ -11,14 +11,16 @@ const DATE = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
 });
 
-export const metadata: Metadata = { title: "Review queue" };
+export const metadata: Metadata = { title: "Published listings" };
 
 /**
- * The review queue.
+ * Everything organisations have published.
  *
- * Oldest first, with how long each has waited stated plainly. The portal
- * promises review "usually within two working days", and a queue that hides
- * age is how that promise quietly stops being true.
+ * This was a queue of listings waiting for approval. Trust moved to the
+ * organisation: verification is now the gate, an unverified organisation
+ * cannot post at all, and a verified one publishes directly. So this screen
+ * moderates rather than approves, and anything already hidden sorts to the
+ * top because it is the only state somebody chose.
  */
 export default async function QueuePage({
   searchParams,
@@ -33,12 +35,12 @@ export default async function QueuePage({
     <Page width={820} top={56} gap={26}>
       <div className="flex flex-col gap-[10px]">
         <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
-          Review queue
+          Published listings
         </h1>
         <p className="m-0 text-[17px] leading-[1.55] text-ink-70">
           {queue.length === 0
-            ? "Nothing waiting. Listings appear here the moment an organisation submits one."
-            : `${queue.length} waiting, oldest first. Nothing goes live to women until it clears this screen.`}
+            ? "Nothing posted yet. Listings appear here as verified organisations publish them."
+            : "Verified organisations publish without waiting. Moderation happens here, after the fact: open one to hide it from women, with a reason they can see."}
         </p>
       </div>
 
@@ -73,12 +75,18 @@ export default async function QueuePage({
               <div className="flex flex-col items-end gap-1">
                 <span
                   className={`rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${
-                    overdue ? "bg-red-50 text-red-700" : "bg-gold-200 text-gold-700"
+                    item.hiddenAt
+                      ? "bg-red-50 text-red-700"
+                      : overdue
+                        ? "bg-closed text-ink-65"
+                        : "bg-sage-200 text-green-700"
                   }`}
                 >
-                  {waited === 0
-                    ? "Today"
-                    : `${waited} ${waited === 1 ? "day" : "days"} waiting`}
+                  {item.hiddenAt
+                    ? "Hidden from women"
+                    : item.status === "closed"
+                      ? "Closed"
+                      : "Live"}
                 </span>
                 <span className="text-[14px] text-ink-60">
                   {item.submittedAt ? DATE.format(new Date(item.submittedAt)) : ""}

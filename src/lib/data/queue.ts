@@ -9,6 +9,8 @@ export type QueueItem = {
   /** Whole days since it was submitted. Computed here, not during render. */
   waitedDays: number;
   status: string;
+  /** Set when an admin has taken it down from every woman-facing surface. */
+  hiddenAt: string | null;
 };
 
 export type ReviewListing = {
@@ -31,25 +33,27 @@ export type ReviewListing = {
 };
 
 /**
- * The review queue, oldest first.
+ * Everything published, newest first.
  *
- * Oldest first is not a preference. Screen 12 of the organisation portal
- * promises review "usually within two working days", and any other order
- * lets a listing sit while newer ones overtake it.
+ * This was a queue of listings waiting for approval. Nothing waits any more:
+ * a verified organisation publishes directly, and this is where an admin
+ * moderates afterwards. Newest first, because the thing most likely to need
+ * looking at is the thing that just appeared.
  */
 export async function getQueue(): Promise<QueueItem[]> {
   const supabase = await createClient();
 
   const { data } = await supabase
     .from("listings")
-    .select("id, name, status, created_at, organisations ( name )")
-    .in("status", ["in_review"])
-    .order("created_at", { ascending: true });
+    .select("id, name, status, hidden_at, created_at, organisations ( name )")
+    .in("status", ["live", "closed", "in_review"])
+    .order("created_at", { ascending: false });
 
   type Row = {
     id: string;
     name: string;
     status: string;
+    hidden_at: string | null;
     created_at: string;
     organisations: { name: string } | null;
   };
@@ -90,9 +94,16 @@ export async function getQueue(): Promise<QueueItem[]> {
         submittedAt,
         waitedDays: Math.floor((now - new Date(submittedAt).getTime()) / DAY),
         status: row.status,
+        hiddenAt: row.hidden_at,
       };
     })
-    .sort((a, b) => (a.submittedAt ?? "").localeCompare(b.submittedAt ?? ""));
+    // Hidden first: it is the only state on this screen that someone decided
+    // to put a listing into, so it is the one worth seeing without scrolling.
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.hiddenAt)) - Number(Boolean(a.hiddenAt)) ||
+        (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""),
+    );
 }
 
 export async function getReviewListing(

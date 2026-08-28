@@ -40,12 +40,14 @@ const DAY = 24 * 60 * 60 * 1000;
  * is the reason anyone drafts a listing before being verified.
  */
 export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]> {
+  // Every organisation, not only the ones waiting. An admin needs to be able
+  // to look one up after the fact, and to see what was declined, not just
+  // work a queue. The screen filters; the query does not decide for it.
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("organisations")
     .select("id, name, type, place, status, created_at")
-    .in("status", ["pending", "more_evidence"])
     .order("created_at", { ascending: true });
 
   if (error) throw error;

@@ -54,7 +54,7 @@ function Links({ panel = false }: { panel?: boolean }) {
   const cls = panel ? PANEL_LINK : LINK;
   return (
     <>
-      <Link href="/queue" className={cls}>Review queue</Link>
+      <Link href="/queue" className={cls}>Listings</Link>
       <Link href="/organisations" className={cls}>Verify</Link>
       <Link href="/taxonomy/zones" className={cls}>Access Zones</Link>
       <Link href="/taxonomy/situations" className={cls}>Situations</Link>
