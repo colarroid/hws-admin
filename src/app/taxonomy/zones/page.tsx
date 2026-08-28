@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { Page } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
-import { Field, TextAreaField } from "@/components/ui/Field";
 import { requireAdmin } from "@/lib/data/admin";
 import { getZones } from "@/lib/data/taxonomy";
-import {
-  createZone,
-  updateZone,
-  retireZone,
-  restoreZone,
-} from "../actions";
+import { ZoneRow } from "@/components/admin/ZoneRow";
+import { AddZone } from "@/components/admin/AddZone";
+import { restoreZone } from "../actions";
 
 const DATE = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -26,8 +22,13 @@ export const metadata: Metadata = { title: "Access Zones" };
  * administrator, so the taxonomy can grow as the ecosystem does without a
  * release. This is that screen.
  *
- * Three things it has to get right, all of them consequences of zones being
- * data rather than an enumerated type:
+ * A list, with editing behind a dialog. Every zone used to render as an open
+ * form, which made a wall of inputs where nothing could be scanned and every
+ * field looked equally urgent. Zones are read far more often than they are
+ * changed.
+ *
+ * Three things it still has to get right, all of them consequences of zones
+ * being data rather than an enumerated type:
  *
  *   - The slug is shown but never editable. Every organisation and listing
  *     holds it, so identity and name have to be separable or a rename breaks
@@ -76,144 +77,44 @@ export default async function ZonesPage({
         </p>
       ) : null}
 
-      <section className="flex flex-col gap-[14px]">
-        <h2 className="m-0 eyebrow text-ink-60">
-          {live.length} in use
-        </h2>
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="m-0 eyebrow text-ink-60">{live.length} in use</h2>
+          <AddZone />
+        </div>
 
-        {live.map((zone) => (
-          <div
-            key={zone.id}
-            className="flex flex-col gap-4 rounded-card shadow-hairline bg-surface p-6"
-          >
-            <form action={updateZone} className="flex flex-col gap-4">
-              <input type="hidden" name="id" value={zone.id} />
-
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="min-w-[240px] flex-1">
-                  <Field label="Name" name="name" defaultValue={zone.name} required />
-                </div>
-                <div className="w-[110px]">
-                  <Field
-                    label="Order"
-                    name="sortOrder"
-                    type="number"
-                    defaultValue={String(zone.sortOrder)}
-                  />
-                </div>
-              </div>
-
-              <TextAreaField
-                label="Focus"
-                name="focus"
-                rows={2}
-                defaultValue={zone.focus}
-                required
-                hint="The line beneath the name on the organisation's zone picker."
-              />
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-[14px] text-ink-60">
-                  <code className="rounded-[4px] bg-closed px-[5px] py-[1px] text-[13px]">
-                    {zone.slug}
-                  </code>{" "}
-                  &middot; {zone.organisationCount} organisation
-                  {zone.organisationCount === 1 ? "" : "s"},{" "}
-                  {zone.listingCount} listing
-                  {zone.listingCount === 1 ? "" : "s"}
-                </span>
-                <Button type="submit" variant="secondary" size="inline">
-                  Save changes
-                </Button>
-              </div>
-            </form>
-
-            {live.length > 1 ? (
-              <form
-                action={retireZone}
-                className="flex flex-wrap items-end gap-3 border-t border-hairline-soft pt-4"
-              >
-                <input type="hidden" name="id" value={zone.id} />
-                <div className="flex min-w-[260px] flex-1 flex-col gap-2">
-                  <label
-                    htmlFor={`successor-${zone.id}`}
-                    className="text-[15px] font-semibold"
-                  >
-                    Retire, moving everything to
-                  </label>
-                  <select
-                    id={`successor-${zone.id}`}
-                    name="successorId"
-                    required
-                    defaultValue=""
-                    className="min-h-[44px] rounded-control shadow-hairline bg-surface p-3 text-[16px] text-ink"
-                  >
-                    <option value="" disabled>
-                      Choose a zone…
-                    </option>
-                    {live
-                      .filter((other) => other.id !== zone.id)
-                      .map((other) => (
-                        <option key={other.id} value={other.id}>
-                          {other.name}
-                        </option>
-                      ))}
-                  </select>
-                  <span className="text-[14px] leading-[1.5] text-ink-60">
-                    {zone.organisationCount + zone.listingCount === 0
-                      ? "Nothing is attached, so nothing moves."
-                      : `${zone.organisationCount} organisation${zone.organisationCount === 1 ? "" : "s"} and ${zone.listingCount} listing${zone.listingCount === 1 ? "" : "s"} will move.`}
-                  </span>
-                </div>
-                <Button type="submit" variant="destructive" size="inline">
-                  Retire
-                </Button>
-              </form>
-            ) : null}
-          </div>
-        ))}
-      </section>
-
-      <section className="flex flex-col gap-4 rounded-card-lg shadow-hairline bg-surface p-6">
-        <h2 className="m-0 font-display text-[24px] font-normal leading-[1.2]">
-          Add a zone
-        </h2>
-        <p className="m-0 max-w-[62ch] text-[16px] leading-[1.6] text-ink-70">
-          Four areas from the original category list have no zone: housing,
-          safety and rights, support for new Scots, and caring and family life.
-          Until they do, organisations working in those areas can only reach
-          the platform through hand routing.
-        </p>
-        <form action={createZone} className="flex flex-col gap-4">
-          <Field
-            label="Name"
-            name="name"
-            required
-            placeholder="e.g. Housing &amp; Practical Support"
-          />
-          <TextAreaField
-            label="Focus"
-            name="focus"
-            rows={2}
-            required
-            placeholder="e.g. Housing information, homelessness prevention, household support"
-          />
-          <Button type="submit" size="inline" className="self-start px-6 py-4">
-            Add zone
-          </Button>
-        </form>
+        <div className="flex flex-col rounded-card bg-surface px-[22px] py-2 shadow-hairline">
+          {live.map((zone) => (
+            <ZoneRow
+              key={zone.id}
+              zone={{
+                id: zone.id,
+                slug: zone.slug,
+                name: zone.name,
+                focus: zone.focus,
+                sortOrder: zone.sortOrder,
+                organisationCount: zone.organisationCount,
+                listingCount: zone.listingCount,
+              }}
+              others={live
+                .filter((other) => other.id !== zone.id)
+                .map((other) => ({ id: other.id, name: other.name }))}
+              // Retiring the last one would leave organisations with nothing
+              // to pick, so it is not offered.
+              canRetire={live.length > 1}
+            />
+          ))}
+        </div>
       </section>
 
       {retired.length > 0 ? (
         <section className="flex flex-col gap-[14px]">
-          <h2 className="m-0 eyebrow text-ink-60">
-            Retired
-          </h2>
+          <h2 className="m-0 eyebrow text-ink-60">Retired</h2>
           {retired.map((zone) => (
             <form
               key={zone.id}
               action={restoreZone}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-card shadow-hairline bg-surface-subtle p-5"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-card bg-surface-subtle p-5 shadow-hairline"
             >
               <input type="hidden" name="id" value={zone.id} />
               <div className="flex flex-col gap-1">
