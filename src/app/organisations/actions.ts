@@ -27,7 +27,7 @@ function describeSendFailure(raw: string | undefined): string {
   const detail = raw ?? "";
 
   if (detail.includes("RESEND_API_KEY") || detail.includes("EMAIL_FROM"))
-    return "email is not configured on this deployment";
+    return "RESEND_API_KEY and EMAIL_FROM are not set on this deployment, so no email can be sent from here at all";
   if (detail.includes("reserved address"))
     return "their address is on a reserved testing domain and cannot receive email";
   if (detail.includes("403"))
