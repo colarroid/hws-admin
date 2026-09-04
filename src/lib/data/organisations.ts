@@ -10,7 +10,8 @@ export type VerificationStatus =
 export type OrganisationSummary = {
   id: string;
   name: string;
-  type: string;
+  /** One or more, since an organisation is often more than one thing. */
+  types: string[];
   place: string | null;
   status: VerificationStatus;
   submittedAt: string;
@@ -47,7 +48,7 @@ export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]>
 
   const { data, error } = await supabase
     .from("organisations")
-    .select("id, name, type, place, status, created_at")
+    .select("id, name, types, place, status, created_at")
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -73,7 +74,7 @@ export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]>
   return (data ?? []).map((row) => ({
     id: row.id,
     name: row.name,
-    type: row.type,
+    types: row.types ?? [],
     place: row.place,
     status: row.status as VerificationStatus,
     submittedAt: row.created_at,
@@ -90,7 +91,7 @@ export async function getOrganisation(
   const { data } = await supabase
     .from("organisations")
     .select(
-      `id, name, type, place, website, blurb, status, created_at,
+      `id, name, types, place, website, blurb, status, created_at,
        registration_number, funder_note, contact_name, contact_role,
        contact_phone, review_note, verified_at,
        organisation_zones ( access_zones ( name ) )`,
@@ -117,7 +118,7 @@ export async function getOrganisation(
   return {
     id: row.id,
     name: row.name,
-    type: row.type,
+    types: row.types ?? [],
     place: row.place,
     website: row.website,
     blurb: row.blurb,

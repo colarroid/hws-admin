@@ -71,7 +71,10 @@ export default async function VerifyOrganisationPage({
         </h1>
         <p className="m-0 text-[17px] text-ink-65">
           {[
-            labelFor(ORGANISATION_TYPES, organisation.type),
+            organisation.types
+              .map((slug) => labelFor(ORGANISATION_TYPES, slug))
+              .filter(Boolean)
+              .join(", "),
             organisation.place,
             organisation.zoneNames[0],
           ]
