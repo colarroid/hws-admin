@@ -40,8 +40,9 @@ export default async function NewListingPage() {
         </h1>
         <p className="m-0 max-w-[64ch] text-[17px] leading-[1.55] text-ink-70">
           On behalf of an organisation that has not posted it themselves. It
-          becomes an ordinary listing — a woman cannot tell who typed it, and
-          it should not change what she gets — with your name on the record.
+          becomes an ordinary listing. A woman cannot tell who typed it, and it
+          should not change what she gets. Your name goes on the record
+          instead.
         </p>
       </div>
 

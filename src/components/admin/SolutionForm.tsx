@@ -150,7 +150,7 @@ export function SolutionForm({
           name="whatToExpect"
           rows={2}
                     placeholder="e.g. A short form, then someone phones within a week. Or: drop in any Tuesday, no need to book."
-          hint="Applying, turning up, or just reading it — say what actually happens. Not knowing is the most common reason women do not act on a listing."
+          hint="Applying, turning up, or just reading it. Say what actually happens, because not knowing is the most common reason women do not act on a listing."
         />
 
         <div className="flex flex-col gap-[10px]">

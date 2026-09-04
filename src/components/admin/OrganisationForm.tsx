@@ -132,7 +132,7 @@ export function OrganisationForm({
 
       <Section
         title="Classification"
-        blurb="The zone is where they live. The markets are what a woman can actually reach through them, and they are yours to set — she is trusting your judgment, not their marketing."
+        blurb="The zone is where they live. The markets are what a woman can actually reach through them, and they are yours to set. She is trusting your judgment, not their marketing."
       >
         <RadioGroup
           legend="Primary Access Zone"
