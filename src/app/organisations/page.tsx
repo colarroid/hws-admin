@@ -14,10 +14,20 @@ const LABELS: Record<string, string> = {
 const TABS = ["Waiting", "Verified", "Declined", "All"] as const;
 type Tab = (typeof TABS)[number];
 
-const TAB_MATCHES: Record<Tab, (status: string) => boolean> = {
-  Waiting: (s) => s === "pending" || s === "more_evidence",
-  Verified: (s) => s === "verified",
-  Declined: (s) => s === "rejected",
+type Row = { status: string; requestedAt: string | null };
+
+/**
+ * Waiting means they asked, which is the end of onboarding rather than the
+ * end of the profile: checking starts while they are still writing it. An
+ * organisation that broke off partway through onboarding never asked, so it
+ * is not a decision anybody can make and appears only under All.
+ */
+const TAB_MATCHES: Record<Tab, (o: Row) => boolean> = {
+  Waiting: (o) =>
+    Boolean(o.requestedAt) &&
+    (o.status === "pending" || o.status === "more_evidence"),
+  Verified: (o) => o.status === "verified",
+  Declined: (o) => o.status === "rejected",
   All: () => true,
 };
 
@@ -44,8 +54,8 @@ export default async function OrganisationsPage({
   // Waiting first, because that is the work. The other tabs are for looking
   // something up, which is why they exist at all.
   const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : "Waiting";
-  const organisations = all.filter((o) => TAB_MATCHES[tab](o.status));
-  const waiting = all.filter((o) => TAB_MATCHES.Waiting(o.status)).length;
+  const organisations = all.filter((o) => TAB_MATCHES[tab](o));
+  const waiting = all.filter((o) => TAB_MATCHES.Waiting(o)).length;
 
   return (
     <Page width={820} top={56} gap={26}>
@@ -85,7 +95,7 @@ export default async function OrganisationsPage({
       <nav aria-label="Filter by status" className="flex flex-wrap gap-[10px]">
         {TABS.map((label) => {
           const active = label === tab;
-          const count = all.filter((o) => TAB_MATCHES[label](o.status)).length;
+          const count = all.filter((o) => TAB_MATCHES[label](o)).length;
           return (
             <Link
               key={label}
@@ -126,7 +136,17 @@ export default async function OrganisationsPage({
                 {organisation.name}
               </span>
               <span className="text-[15px] text-ink-65">
-                {[organisation.place, `${organisation.listingCount} listing${organisation.listingCount === 1 ? "" : "s"} waiting on this`]
+                {[
+                  organisation.place,
+                  organisation.listingCount +
+                    (organisation.listingCount === 1 ? " listing" : " listings"),
+                  // Their profile is the account of who they serve and how
+                  // far they reach. Deciding without it is deciding on a name
+                  // and a registration number.
+                  organisation.profileGaps === 0
+                    ? "profile complete"
+                    : organisation.profileGaps + " profile answers missing",
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </span>
@@ -134,17 +154,25 @@ export default async function OrganisationsPage({
             <div className="flex flex-col items-end gap-1">
               <span
                 className={`rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${
-                  organisation.waitedDays >= 2 && organisation.status === "pending"
-                    ? "bg-red-50 text-red-700"
-                    : "bg-gold-200 text-gold-700"
+                  !organisation.requestedAt
+                    ? "bg-closed text-ink-65"
+                    : organisation.waitedDays >= 2 &&
+                        organisation.status === "pending"
+                      ? "bg-red-50 text-red-700"
+                      : "bg-gold-200 text-gold-700"
                 }`}
               >
-                {LABELS[organisation.status] ?? organisation.status}
+                {organisation.requestedAt
+                  ? (LABELS[organisation.status] ?? organisation.status)
+                  : "Not finished signing up"}
               </span>
               <span className="text-[14px] text-ink-60">
-                {organisation.waitedDays === 0
-                  ? "Today"
-                  : `${organisation.waitedDays} ${organisation.waitedDays === 1 ? "day" : "days"}`}
+                {!organisation.requestedAt
+                  ? ""
+                  : organisation.waitedDays === 0
+                    ? "Today"
+                    : organisation.waitedDays +
+                      (organisation.waitedDays === 1 ? " day" : " days")}
               </span>
             </div>
           </Link>

@@ -248,6 +248,25 @@ export default async function VerifyOrganisationPage({
         />
       </section>
 
+      {/* Two different absences, and they mean opposite things. Never asked
+          means they walked away mid-signup. Asked but blank means they are
+          writing it now, and a decision made today is made on very little. */}
+      {!organisation.requestedAt ? (
+        <p className="m-0 rounded-card border border-gold-300 bg-gold-200 px-[22px] py-5 text-[16px] leading-[1.55] text-gold-700">
+          <strong>They never finished signing up.</strong> They have not asked
+          to be verified, so nothing here is waiting on you.
+        </p>
+      ) : organisation.profileGaps > 0 ? (
+        <p className="m-0 rounded-card border border-gold-300 bg-gold-200 px-[22px] py-5 text-[16px] leading-[1.55] text-gold-700">
+          <strong>
+            Their profile has {organisation.profileGaps} answer
+            {organisation.profileGaps === 1 ? "" : "s"} still missing.
+          </strong>{" "}
+          They are filling it in now. You can still decide on the registration
+          check alone, but the section below is what says who they serve.
+        </p>
+      ) : null}
+
       <VerificationForm
         organisationId={organisation.id}
         status={organisation.status}

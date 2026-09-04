@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { profileGapCount } from "@/lib/profile";
 
 export type VerificationStatus =
   | "pending"
@@ -17,6 +18,10 @@ export type OrganisationSummary = {
   submittedAt: string;
   waitedDays: number;
   listingCount: number;
+  /** Null until they finished the profile, which is what asks to be reviewed. */
+  requestedAt: string | null;
+  /** How many profile answers are still missing. 0 means it is finished. */
+  profileGaps: number;
 };
 
 export type OrganisationDetail = OrganisationSummary & {
@@ -60,6 +65,10 @@ const DAY = 24 * 60 * 60 * 1000;
  *
  * Onboarding tells them "usually within two working days", and that promise
  * is the reason anyone drafts a listing before being verified.
+ *
+ * "Waiting" means they asked. An organisation still filling in its profile
+ * has not asked, and putting it in the queue is how a queue fills with
+ * half-empty records nobody can decide on.
  */
 export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]> {
   // Every organisation, not only the ones waiting. An admin needs to be able
@@ -69,7 +78,11 @@ export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]>
 
   const { data, error } = await supabase
     .from("organisations")
-    .select("id, name, types, place, status, created_at")
+    .select(
+      `id, name, types, place, status, created_at, verification_requested_at,
+       mission, audiences, service_kinds, access_routes, cost_options,
+       coverage, eligibility, posting_frequency`,
+    )
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -98,9 +111,25 @@ export async function getOrganisationsToVerify(): Promise<OrganisationSummary[]>
     types: row.types ?? [],
     place: row.place,
     status: row.status as VerificationStatus,
-    submittedAt: row.created_at,
-    waitedDays: Math.floor((now - new Date(row.created_at).getTime()) / DAY),
+    submittedAt: row.verification_requested_at ?? row.created_at,
+    // From when they asked, not from when they signed up. Someone who spent a
+    // fortnight writing their profile has not been waiting a fortnight on us.
+    waitedDays: Math.floor(
+      (now - new Date(row.verification_requested_at ?? row.created_at).getTime()) /
+        DAY,
+    ),
     listingCount: counts.get(row.id) ?? 0,
+    requestedAt: row.verification_requested_at,
+    profileGaps: profileGapCount({
+      mission: row.mission,
+      audiences: row.audiences ?? [],
+      serviceKinds: row.service_kinds ?? [],
+      accessRoutes: row.access_routes ?? [],
+      costOptions: row.cost_options ?? [],
+      coverage: row.coverage,
+      eligibility: row.eligibility,
+      postingFrequency: row.posting_frequency,
+    }),
   }));
 }
 
@@ -118,7 +147,7 @@ export async function getOrganisation(
        audiences, audiences_other, service_kinds, access_routes, cost_options,
        cost_note, coverage, coverage_note, eligibility, not_eligible,
        posting_frequency, availability, availability_note, logo_path,
-       logo_source, profile_updated_at,
+       logo_source, profile_updated_at, verification_requested_at,
        organisation_zones ( access_zones ( name ) )`,
     )
     .eq("id", id)
@@ -153,6 +182,17 @@ export async function getOrganisation(
       (Date.now() - new Date(row.created_at).getTime()) / DAY,
     ),
     listingCount: count ?? 0,
+    requestedAt: row.verification_requested_at,
+    profileGaps: profileGapCount({
+      mission: row.mission,
+      audiences: row.audiences ?? [],
+      serviceKinds: row.service_kinds ?? [],
+      accessRoutes: row.access_routes ?? [],
+      costOptions: row.cost_options ?? [],
+      coverage: row.coverage,
+      eligibility: row.eligibility,
+      postingFrequency: row.posting_frequency,
+    }),
     registrationNumber: row.registration_number,
     funderNote: row.funder_note,
     contactName: row.contact_name,
