@@ -16,7 +16,7 @@ export type ResultCardData = {
    * only the ranker knows why something scored.
    */
   why: string;
-  /** "Verified · last checked 4 August 2026", or the pending wording. */
+  /** "Verified · last updated 4 August 2026", or the pending wording. */
   verified: string;
 };
 

@@ -51,7 +51,7 @@ export default async function ReviewPage({
     whoFor: listing.who_for ?? "",
     whatToExpect: listing.what_to_expect ?? "",
     why: "written from her answers when this appears in her results.",
-    verified: "Verified · last checked today",
+    verified: "Verified · last updated today",
   };
 
   const unverified = listing.organisationStatus !== "verified";
