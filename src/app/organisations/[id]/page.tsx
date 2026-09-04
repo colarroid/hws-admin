@@ -4,6 +4,13 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Page } from "@/components/ui/Page";
 import { VerificationForm } from "@/components/admin/VerificationForm";
+import { ClassificationForm } from "@/components/admin/ClassificationForm";
+import {
+  getAccessZones,
+  getMarkets,
+  getMarketsForOrganisation,
+  getZonesForOrganisation,
+} from "@/lib/data/markets";
 import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisation, registerLinks } from "@/lib/data/organisations";
 import {
@@ -54,15 +61,22 @@ export default async function VerifyOrganisationPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   await requireAdmin();
 
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, saved } = await searchParams;
   const organisation = await getOrganisation(id);
 
   if (!organisation) notFound();
+
+  const [zones, markets, zoneChoice, marketIds] = await Promise.all([
+    getAccessZones(),
+    getMarkets(),
+    getZonesForOrganisation(id),
+    getMarketsForOrganisation(id),
+  ]);
 
   const links = registerLinks(organisation.registrationNumber);
 
@@ -266,6 +280,23 @@ export default async function VerifyOrganisationPage({
           check alone, but the section below is what says who they serve.
         </p>
       ) : null}
+
+      <section className="flex flex-col gap-4 border-t border-hairline-soft pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="m-0 eyebrow text-ink-60">Classification</h2>
+          {saved === "classification" ? (
+            <span className="text-[14px] font-semibold text-green-700">Saved</span>
+          ) : null}
+        </div>
+        <ClassificationForm
+          organisationId={organisation.id}
+          zones={zones}
+          markets={markets}
+          primaryZoneId={zoneChoice.primaryId}
+          alsoZoneIds={zoneChoice.alsoIds}
+          marketIds={marketIds}
+        />
+      </section>
 
       <VerificationForm
         organisationId={organisation.id}

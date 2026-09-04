@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Page } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/data/admin";
@@ -53,9 +53,18 @@ export default async function ListingsPage({
   return (
     <Page width={820} top={56} gap={26}>
       <div className="flex flex-col gap-[10px]">
-        <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
-          Published listings
-        </h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
+            Published listings
+          </h1>
+          <Link
+            href="/listings/new"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ink px-6 py-[13px] text-[16px] font-bold text-white no-underline"
+          >
+            <Plus size={17} strokeWidth={2} aria-hidden="true" />
+            Post a solution
+          </Link>
+        </div>
         <p className="m-0 max-w-[64ch] text-[17px] leading-[1.55] text-ink-70">
           Verified organisations publish without waiting. Moderation happens
           here, after the fact: open one to flag it, and it stops reaching women

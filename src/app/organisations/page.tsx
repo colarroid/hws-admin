@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Page } from "@/components/ui/Page";
 import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisationsToVerify } from "@/lib/data/organisations";
@@ -60,9 +61,18 @@ export default async function OrganisationsPage({
   return (
     <Page width={820} top={56} gap={26}>
       <div className="flex flex-col gap-[10px]">
-        <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
-          Organisations
-        </h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h1 className="m-0 font-display text-[32px] font-normal leading-[1.1] tracking-[-0.01em] sm:text-[42px]">
+            Organisations
+          </h1>
+          <Link
+            href="/organisations/new"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-ink px-6 py-[13px] text-[16px] font-bold text-white no-underline"
+          >
+            <Plus size={17} strokeWidth={2} aria-hidden="true" />
+            Add an organisation
+          </Link>
+        </div>
         <p className="m-0 max-w-[62ch] text-[17px] leading-[1.55] text-ink-70">
           {waiting === 0
             ? "Nobody waiting. Organisations appear here when they finish onboarding."
