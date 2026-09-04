@@ -28,6 +28,27 @@ export type OrganisationDetail = OrganisationSummary & {
   contactRole: string | null;
   contactPhone: string | null;
   reviewNote: string | null;
+
+  // The profile. Verification context: who they say they serve, how far they
+  // reach, and how often they expect to show up.
+  mission: string | null;
+  uniqueOffer: string | null;
+  audiences: string[];
+  audiencesOther: string | null;
+  serviceKinds: string[];
+  accessRoutes: string[];
+  costOptions: string[];
+  costNote: string | null;
+  coverage: string | null;
+  coverageNote: string | null;
+  eligibility: string | null;
+  notEligible: string | null;
+  postingFrequency: string | null;
+  availability: string | null;
+  availabilityNote: string | null;
+  logoUrl: string | null;
+  logoSource: string | null;
+  profileUpdatedAt: string | null;
   verifiedAt: string | null;
   zoneNames: string[];
 };
@@ -93,7 +114,11 @@ export async function getOrganisation(
     .select(
       `id, name, types, place, website, blurb, status, created_at,
        registration_number, funder_note, contact_name, contact_role,
-       contact_phone, review_note, verified_at,
+       contact_phone, review_note, verified_at, mission, unique_offer,
+       audiences, audiences_other, service_kinds, access_routes, cost_options,
+       cost_note, coverage, coverage_note, eligibility, not_eligible,
+       posting_frequency, availability, availability_note, logo_path,
+       logo_source, profile_updated_at,
        organisation_zones ( access_zones ( name ) )`,
     )
     .eq("id", id)
@@ -135,6 +160,27 @@ export async function getOrganisation(
     contactPhone: row.contact_phone,
     reviewNote: row.review_note,
     verifiedAt: row.verified_at,
+    mission: row.mission,
+    uniqueOffer: row.unique_offer,
+    audiences: row.audiences ?? [],
+    audiencesOther: row.audiences_other,
+    serviceKinds: row.service_kinds ?? [],
+    accessRoutes: row.access_routes ?? [],
+    costOptions: row.cost_options ?? [],
+    costNote: row.cost_note,
+    coverage: row.coverage,
+    coverageNote: row.coverage_note,
+    eligibility: row.eligibility,
+    notEligible: row.not_eligible,
+    postingFrequency: row.posting_frequency,
+    availability: row.availability,
+    availabilityNote: row.availability_note,
+    logoUrl: row.logo_path
+      ? supabase.storage.from("organisation-logos").getPublicUrl(row.logo_path)
+          .data.publicUrl
+      : null,
+    logoSource: row.logo_source,
+    profileUpdatedAt: row.profile_updated_at,
     zoneNames: (row.organisation_zones ?? [])
       .flatMap((z) =>
         Array.isArray(z.access_zones)

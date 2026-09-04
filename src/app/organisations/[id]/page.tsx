@@ -6,7 +6,18 @@ import { Page } from "@/components/ui/Page";
 import { VerificationForm } from "@/components/admin/VerificationForm";
 import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisation, registerLinks } from "@/lib/data/organisations";
-import { ORGANISATION_TYPES, labelFor } from "@/lib/design/taxonomy";
+import {
+  AUDIENCES,
+  AVAILABILITY,
+  COSTS,
+  COVERAGE,
+  FORMATS,
+  ORGANISATION_TYPES,
+  POSTING_FREQUENCY,
+  SOLUTION_KINDS,
+  labelFor,
+  labelsFor,
+} from "@/lib/design/taxonomy";
 
 const DATE = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -146,6 +157,95 @@ export default async function VerifyOrganisationPage({
         <Fact label="Contact number" value={organisation.contactPhone} />
         <Fact label="Website" value={organisation.website} />
         <Fact label="What they do" value={organisation.blurb} />
+      </section>
+
+      {/* The profile. Not evidence in the registry sense, but it is the only
+          account of who they intend to serve and how far they reach, and a
+          thin one is itself worth knowing before verifying. */}
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="m-0 eyebrow text-ink-60">Their profile</h2>
+          <span className="text-[14px] text-ink-60">
+            {organisation.profileUpdatedAt
+              ? "Last updated " + DATE.format(new Date(organisation.profileUpdatedAt))
+              : "Never filled in"}
+          </span>
+        </div>
+
+        {organisation.logoUrl ? (
+          <div className="flex items-center gap-4 border-t border-hairline-soft pt-4">
+            <span className="eyebrow text-ink-60">Logo</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={organisation.logoUrl}
+              alt=""
+              className="size-[48px] rounded-control object-contain"
+            />
+            <span className="text-[15px] text-ink-60">
+              {organisation.logoSource === "uploaded"
+                ? "Uploaded by them"
+                : "Taken from their website"}
+            </span>
+          </div>
+        ) : null}
+
+        <Fact label="Mission" value={organisation.mission} />
+        <Fact label="What they offer that others do not" value={organisation.uniqueOffer} />
+        <Fact
+          label="Who they work with"
+          value={
+            [
+              labelsFor(AUDIENCES, organisation.audiences).join(", "),
+              organisation.audiencesOther,
+            ]
+              .filter(Boolean)
+              .join(" · ") || null
+          }
+        />
+        <Fact
+          label="What they provide"
+          value={labelsFor(SOLUTION_KINDS, organisation.serviceKinds).join(", ") || null}
+        />
+        <Fact
+          label="How women reach them"
+          value={labelsFor(FORMATS, organisation.accessRoutes).join(", ") || null}
+        />
+        <Fact
+          label="Cost"
+          value={
+            [
+              labelsFor(COSTS, organisation.costOptions).join(", "),
+              organisation.costNote,
+            ]
+              .filter(Boolean)
+              .join(" · ") || null
+          }
+        />
+        <Fact
+          label="How far they reach"
+          value={
+            [labelFor(COVERAGE, organisation.coverage), organisation.coverageNote]
+              .filter(Boolean)
+              .join(" · ") || null
+          }
+        />
+        <Fact label="Who they can help" value={organisation.eligibility} />
+        <Fact label="Who they cannot help" value={organisation.notEligible} />
+        <Fact
+          label="When they run"
+          value={
+            [
+              labelFor(AVAILABILITY, organisation.availability),
+              organisation.availabilityNote,
+            ]
+              .filter(Boolean)
+              .join(" · ") || null
+          }
+        />
+        <Fact
+          label="How often they expect to post"
+          value={labelFor(POSTING_FREQUENCY, organisation.postingFrequency) || null}
+        />
       </section>
 
       <VerificationForm
