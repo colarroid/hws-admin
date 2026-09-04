@@ -26,11 +26,29 @@ export function PlaceField({
   name,
   defaultValue = "",
   placeholder,
+  hint,
+  extras = [],
+  multiple = false,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   placeholder?: string;
+  /** Shown under the field at rest. The unrecognised note replaces it. */
+  hint?: string;
+  /**
+   * Answers that are real but are not places: "Scotland-wide", "Online".
+   * A listing that runs everywhere has no town, and forcing one on it would
+   * hide it from every woman outside whichever town got typed.
+   */
+  extras?: string[];
+  /**
+   * Several places in one field, comma separated. Only the text after the
+   * last comma is searched, and choosing appends rather than replaces, so a
+   * coverage note can be built up one place at a time and still be one
+   * string in the database.
+   */
+  multiple?: boolean;
 }) {
   const id = useId();
   const listId = `${id}-list`;
@@ -46,8 +64,16 @@ export function PlaceField({
   const [canonical, setCanonical] = useState(Boolean(defaultValue));
   const [searched, setSearched] = useState(false);
 
-  const query = value.trim();
+  // In multiple mode only the fragment after the last comma is being typed.
+  const fragment = multiple ? value.split(",").pop() ?? "" : value;
+  const query = fragment.trim();
   const longEnough = query.length >= 2;
+
+  // Offered alongside whatever the table returns, and filtered by what has
+  // been typed so they do not sit there when they cannot apply.
+  const offered: Match[] = extras
+    .filter((extra) => extra.toLowerCase().includes(query.toLowerCase()))
+    .map((extra) => ({ name: extra, note: "anywhere", value: extra }));
 
   useEffect(() => {
     if (!longEnough || canonical) return;
@@ -63,6 +89,8 @@ export function PlaceField({
         if (!response.ok || !live) return;
         const found: Match[] = await response.json();
         if (!live) return;
+        // Fetched only. The extras are merged at render, so this effect does
+        // not depend on an array rebuilt on every keystroke.
         setMatches(found);
         setSearched(true);
         setOpen(found.length > 0);
@@ -79,10 +107,21 @@ export function PlaceField({
     };
   }, [query, longEnough, canonical]);
 
-  const visible = open && !canonical ? matches : [];
+  // Extras show as soon as there is anything to match them against, without
+  // waiting for the round trip the table needs.
+  const visible: Match[] =
+    canonical || !longEnough ? [] : open ? [...offered, ...matches] : offered;
 
   function choose(match: Match) {
-    setValue(match.value);
+    if (multiple) {
+      // Everything before the fragment being typed, plus the choice, plus a
+      // separator so the next one can be typed straight away.
+      const before = value.slice(0, value.lastIndexOf(",") + 1);
+      const kept = before ? before.trimEnd() + " " : "";
+      setValue(kept + match.value + ", ");
+    } else {
+      setValue(match.value);
+    }
     setCanonical(true);
     setOpen(false);
     setActive(-1);
@@ -108,7 +147,8 @@ export function PlaceField({
     }
   }
 
-  const unrecognised = searched && longEnough && !canonical && matches.length === 0;
+  const unrecognised =
+    searched && longEnough && !canonical && matches.length === 0 && offered.length === 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -181,6 +221,8 @@ export function PlaceField({
         <span id={hintId} className="text-[14px] leading-[1.5] text-ink-60">
           We don&apos;t know that place yet, so we&apos;ll keep what you typed.
         </span>
+      ) : hint ? (
+        <span className="text-[14px] leading-[1.5] text-ink-60">{hint}</span>
       ) : null}
     </div>
   );

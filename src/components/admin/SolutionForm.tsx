@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Field, TextAreaField } from "@/components/ui/Field";
 import { Chip, ChipGroup } from "@/components/ui/Chip";
+import { PlaceField } from "@/components/ui/PlaceField";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/Form";
 import { SOLUTION_KINDS, COSTS, FORMATS } from "@/lib/design/taxonomy";
@@ -185,10 +186,12 @@ export function SolutionForm({
 
         <div className="flex flex-wrap gap-[14px]">
           <div className="min-w-[200px] flex-1">
-            <Field
+            <PlaceField
               label="Where"
               name="place"
-                            placeholder="e.g. Bathgate, or Scotland-wide"
+              placeholder="e.g. Bathgate, or Scotland-wide"
+              extras={["Scotland-wide", "Online"]}
+              hint="Her answer is matched against this, so a typo hides the listing from the women closest to it."
             />
           </div>
           <div className="min-w-[200px] flex-1">

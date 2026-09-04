@@ -235,7 +235,13 @@ export function OrganisationForm({
         />
 
         {COVERAGE_NEEDS_DETAIL.includes(coverage) ? (
-          <Field label="Which areas, exactly?" name="coverageNote" />
+          <PlaceField
+            label="Which areas, exactly?"
+            name="coverageNote"
+            placeholder="Start typing a town or council area"
+            multiple
+            hint="Add as many as they cover. Pick from the list where you can, so they match what women type."
+          />
         ) : null}
 
         <TextAreaField label="Who can they help?" name="eligibility" rows={3} />
