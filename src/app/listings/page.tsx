@@ -138,9 +138,18 @@ export default async function ListingsPage({
             <Link
               key={item.id}
               href={`/listings/${item.id}`}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-card shadow-hairline bg-surface p-6 no-underline transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold"
+              /* Stacked below sm, side by side above it. It used to be one
+                 wrapping row, which meant a long listing name pushed the
+                 status and the date onto a line of their own and left them
+                 aligned to the left, under the name, while every shorter row
+                 kept them on the right. Same screen, two layouts, decided by
+                 how long somebody's title happened to be. Stacking on purpose
+                 is at least the same every time. */
+              className="flex flex-col gap-3 rounded-card shadow-hairline bg-surface p-6 no-underline transition-[color,background-color,box-shadow] duration-150 ease-out hover:shadow-hairline-gold sm:flex-row sm:items-start sm:justify-between sm:gap-4"
             >
-              <div className="flex flex-col gap-1">
+              {/* min-w-0 is what lets a long name wrap inside its column
+                  rather than forcing the row wider than the card. */}
+              <div className="flex min-w-0 flex-col gap-1">
                 <span className="font-display text-[20px] font-normal leading-[1.3] text-ink">
                   {item.name}
                 </span>
@@ -148,13 +157,13 @@ export default async function ListingsPage({
                   {item.organisationName}
                 </span>
               </div>
-              <div className="flex flex-col items-end gap-1">
+              <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 sm:flex-col sm:items-end">
                 <span
-                  className={`rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${state.className}`}
+                  className={`whitespace-nowrap rounded-pill-sm px-[11px] py-[7px] text-[13px] font-bold ${state.className}`}
                 >
                   {state.label}
                 </span>
-                <span className="text-[14px] text-ink-60">
+                <span className="whitespace-nowrap text-[14px] text-ink-60">
                   {item.submittedAt ? DATE.format(new Date(item.submittedAt)) : ""}
                 </span>
               </div>
