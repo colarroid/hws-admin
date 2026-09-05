@@ -171,3 +171,30 @@
     animation: none;
   }
 }
+
+/* The waiting state.
+
+   A slow pulse rather than a sweeping shimmer. A shimmer reads as something
+   arriving; a pulse reads as something not here yet, which is the truth, and
+   at three seconds it is calmer to sit with. Reduced motion holds the block
+   still at its mid tone rather than dropping it to nothing, so the shape of
+   the page still says what is coming. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@utility skeleton {
+  background: var(--color-gold-200);
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0.8;
+  }
+}
