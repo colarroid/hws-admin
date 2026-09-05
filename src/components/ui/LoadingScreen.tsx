@@ -2,31 +2,35 @@ import type { ReactNode } from "react";
 import { Page } from "@/components/ui/Page";
 
 /**
- * The wait, in the shape the woman-facing site uses.
+ * The blocks a page wears while it is being fetched.
  *
- * That site names the wait in words and blocks out what is coming in the
- * platform's own colours, and the same answer belongs here. A spinner could
- * mean anything, and "anything" reads as broken. A sentence saying what is
- * being fetched, and roughly how long, tells somebody whether to wait or to
- * go and do something else, which is the only question they actually have.
+ * Two decisions, and they came from different places.
  *
- * The blocks are sage, gold and the off-white surface rather than grey. Grey
- * is the colour of a page that has failed to load; these are the colours of
- * the page that is arriving, so the wait looks like part of the site rather
- * than the absence of it.
+ * The shapes follow the page that is coming: a heading where the heading
+ * goes, a stack where the list goes, three across where three cards land.
+ * That is what turns a wait into "your page is nearly here" rather than "your
+ * page is gone".
  *
- * Nothing moves. A pulse or a shimmer would be the third thing on screen
- * asking to be looked at, and there is no information in it: the wait is
- * already named above and timed below.
+ * The colours come from the find flow, which had the right answer before any
+ * of this existed: sage, gold and the off-white surface, cycled. Grey is the
+ * colour of a page that has failed to load. These are the colours of the page
+ * that is arriving, so the wait looks like part of the site rather than the
+ * absence of it.
+ *
+ * No words and nothing moving. The blocks say what is coming on their own,
+ * and a sentence or a pulse on top of them is a second thing to read in the
+ * half a second before the real page replaces it. Screen readers get one
+ * polite line naming what is loading, because a shape says nothing out loud.
  */
 
-/** The three tones, cycled so a stack of blocks reads as one object. */
+/** The three tones, cycled so a stack reads as one object. */
 const TONES = ["bg-sage-200", "bg-gold-200", "bg-surface-subtle"] as const;
 
 export function LoadingBlock({
   index = 0,
   height = 120,
   tone,
+  radius = "rounded-card",
   className = "",
 }: {
   /** Position in the stack. Decides the tone. */
@@ -35,22 +39,28 @@ export function LoadingBlock({
   /**
    * Replaces the cycled tone outright rather than sitting beside it. Two
    * background utilities on one element is a cascade fight decided by the
-   * order of the stylesheet, not by the order they are written here, so the
+   * order of the stylesheet, not the order they are written here, so an
    * override has to take the place of the original.
    */
   tone?: string;
+  /**
+   * Same reason as `tone`: a second radius utility beside the first is a
+   * cascade fight, so a pill has to replace the card radius rather than sit
+   * next to it.
+   */
+  radius?: string;
   className?: string;
 }) {
   return (
     <div
-      className={`rounded-card ${tone ?? TONES[index % TONES.length]} ${className}`}
+      className={`${radius} ${tone ?? TONES[index % TONES.length]} ${className}`}
       style={{ height }}
       aria-hidden="true"
     />
   );
 }
 
-/** The default arrangement: a stack, like a list of results. */
+/** The default arrangement: a stack, like a list. */
 export function LoadingBlocks({
   count = 3,
   height = 120,
@@ -68,46 +78,60 @@ export function LoadingBlocks({
 }
 
 /**
- * A whole waiting screen.
+ * Holds the wait to the height of the screen.
  *
- * `title` says what is being fetched and `note` says roughly how long. Both
- * are per screen, because "Loading" tells somebody nothing they could not
- * already see.
- *
- * The heading carries the live region and is visible, so there is no separate
- * announcement for a screen reader to trip over: what is read out is what is
- * on the page.
+ * The footer is a sibling of this in the layout, so it cannot be switched off
+ * from here. Filling the viewport pushes it below the fold instead, which is
+ * the same thing to look at and costs nothing: nobody scrolls a page that is
+ * about to be replaced.
  */
-export function LoadingScreen({
-  title,
-  note = "This usually takes a couple of seconds.",
-  width = 780,
-  top = 96,
-  count = 3,
-  height = 120,
+export function LoadingFrame({
+  label,
   children,
 }: {
-  title: string;
-  note?: string;
+  /** What is loading, for a screen reader. Never shown. */
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex min-h-svh flex-col">
+      <span role="status" aria-live="polite" className="sr-only">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * A whole waiting page: a heading, a line under it, then the stack.
+ *
+ * The default for any screen whose shape is a title and a list, which is most
+ * of them.
+ */
+export function LoadingPage({
+  label,
+  width = 780,
+  top = 64,
+  count = 3,
+  height = 120,
+}: {
+  label: string;
   width?: number;
   top?: number;
   count?: number;
   height?: number;
-  /** Overrides the default stack when a screen lands in another shape. */
-  children?: ReactNode;
 }) {
   return (
-    <Page width={width} top={top}>
-      <h1
-        aria-live="polite"
-        className="m-0 font-display text-[30px] font-normal leading-[1.15] tracking-[-0.01em] sm:text-[44px] sm:leading-[1.1]"
-      >
-        {title}
-      </h1>
+    <LoadingFrame label={label}>
+      <Page width={width} top={top} gap={26}>
+        <div className="flex flex-col gap-4" aria-hidden="true">
+          <LoadingBlock index={0} height={38} className="w-[58%]" />
+          <LoadingBlock index={1} height={16} className="w-[78%]" />
+        </div>
 
-      {children ?? <LoadingBlocks count={count} height={height} />}
-
-      <p className="m-0 text-[17px] leading-[1.6] text-ink-70">{note}</p>
-    </Page>
+        <LoadingBlocks count={count} height={height} />
+      </Page>
+    </LoadingFrame>
   );
 }
