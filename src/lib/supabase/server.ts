@@ -36,7 +36,9 @@ export async function createClient() {
           }
         } catch {
           // Called from a Server Component, where cookies are read-only.
-          // Middleware refreshes the session, so this is safe to ignore.
+          // src/proxy.ts refreshes the session on every request, so the
+          // rotated pair has already been written by the time a render
+          // gets here and there is nothing to lose by dropping this.
         }
       },
     },
