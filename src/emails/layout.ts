@@ -60,6 +60,29 @@ export function emailButton(label: string, url: string) {
     </table>`;
 }
 
+/**
+ * A one-time code, set large enough to read off a screen and type on another.
+ *
+ * Letter-spaced but not split into groups: a code broken up for legibility is
+ * a code somebody types with the spaces in. Selectable as one run of digits,
+ * so copy and paste gives the field exactly what it wants.
+ *
+ * The only place this is used today is the Supabase sign-in template, which
+ * lives outside this codebase and is generated from here by
+ * `scripts/build-auth-emails.ts`. It is in this file rather than in that
+ * script so the auth mail cannot drift from the mail the app sends itself.
+ */
+export function emailCode(code: string) {
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px;">
+      <tr>
+        <td align="center" bgcolor="${GROUND}" style="background:${GROUND};border:1px solid ${HAIRLINE};border-radius:8px;padding:22px 16px;font-family:Helvetica,Arial,sans-serif;font-size:34px;font-weight:700;letter-spacing:0.24em;line-height:1.2;color:${INK};">
+          ${code}
+        </td>
+      </tr>
+    </table>`;
+}
+
 /** A quoted block: something HWS wrote, set apart from the sentence around it. */
 export function emailQuote(body: string) {
   return `

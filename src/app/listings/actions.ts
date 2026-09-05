@@ -7,10 +7,7 @@ import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisationEmails, getReviewListing } from "@/lib/data/moderation";
 import { sendEmail } from "@/lib/email";
 import { listingHidden, listingRestored } from "@/emails/listing-decision";
-
-function portalUrl() {
-  return process.env.ORG_PORTAL_URL ?? "";
-}
+import { portalLink } from "@/lib/portal";
 
 /**
  * Tell the organisation, without letting that failure undo the decision.
@@ -84,10 +81,18 @@ export async function hideListing(formData: FormData) {
     changes: { reason },
   });
 
-  const told = await notify(
-    listing.organisationId,
-    listingHidden(listing.name, reason, portalUrl() + "/solutions"),
-  );
+  // Without a portal URL the button in that email points at "/solutions",
+  // which is a relative path in an inbox and resolves against nothing. An
+  // email with a dead button has told nobody anything, so it is not sent and
+  // the admin is shown the same "we could not tell them" as a bounce. The
+  // takedown itself has already happened and stands either way.
+  const link = portalLink("/solutions");
+  const told = link
+    ? await notify(
+        listing.organisationId,
+        listingHidden(listing.name, reason, link),
+      )
+    : false;
 
   revalidatePath("/listings");
   revalidatePath("/listings/" + listingId);
@@ -118,10 +123,10 @@ export async function unhideListing(formData: FormData) {
     action: "unhidden",
   });
 
-  const told = await notify(
-    listing.organisationId,
-    listingRestored(listing.name, portalUrl() + "/solutions"),
-  );
+  const link = portalLink("/solutions");
+  const told = link
+    ? await notify(listing.organisationId, listingRestored(listing.name, link))
+    : false;
 
   revalidatePath("/listings");
   revalidatePath("/listings/" + listingId);

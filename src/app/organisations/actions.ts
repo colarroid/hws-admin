@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/data/admin";
 import { getOrganisation } from "@/lib/data/organisations";
 import { getOrganisationEmails } from "@/lib/data/moderation";
 import { sendEmail } from "@/lib/email";
+import { portalLink } from "@/lib/portal";
 import { verified, moreEvidence, rejected } from "@/emails/verification-decision";
 
 const LIST = "/organisations";
@@ -36,10 +37,6 @@ function describeSendFailure(raw: string | undefined): string {
   if (detail.includes("422")) return "the email provider would not accept their address";
 
   return detail || "no reason came back";
-}
-
-function portalUrl() {
-  return process.env.ORG_PORTAL_URL ?? "";
 }
 
 /**
@@ -112,10 +109,17 @@ export async function markVerified(formData: FormData) {
 
   if (error) redirect(`${LIST}/${id}?error=${encodeURIComponent(error.message)}`);
 
-  const told = await notify(
-    id,
-    verified(organisation.name, `${portalUrl()}/dashboard`),
-  );
+  // A missing portal URL would put a relative path in the button, which is
+  // not a link at all once it is in an inbox. Reported as a failure to tell
+  // them rather than sent looking finished. The decision already stands.
+  const link = portalLink("/dashboard");
+  const told = link
+    ? await notify(id, verified(organisation.name, link))
+    : {
+        ok: false,
+        reason:
+          "ORG_PORTAL_URL is not set, so the email would have carried a button that goes nowhere.",
+      };
 
   revalidatePath(LIST);
   redirect(
@@ -153,10 +157,14 @@ export async function askForEvidence(formData: FormData) {
 
   if (error) redirect(`${LIST}/${id}?error=${encodeURIComponent(error.message)}`);
 
-  const told = await notify(
-    id,
-    moreEvidence(organisation.name, note, `${portalUrl()}/dashboard`),
-  );
+  const link = portalLink("/dashboard");
+  const told = link
+    ? await notify(id, moreEvidence(organisation.name, note, link))
+    : {
+        ok: false,
+        reason:
+          "ORG_PORTAL_URL is not set, so the email would have carried a button that goes nowhere.",
+      };
 
   revalidatePath(LIST);
   redirect(
@@ -196,10 +204,14 @@ export async function markRejected(formData: FormData) {
 
   if (error) redirect(`${LIST}/${id}?error=${encodeURIComponent(error.message)}`);
 
-  const told = await notify(
-    id,
-    rejected(organisation.name, note, `${portalUrl()}/dashboard`),
-  );
+  const link = portalLink("/dashboard");
+  const told = link
+    ? await notify(id, rejected(organisation.name, note, link))
+    : {
+        ok: false,
+        reason:
+          "ORG_PORTAL_URL is not set, so the email would have carried a button that goes nowhere.",
+      };
 
   revalidatePath(LIST);
   redirect(
