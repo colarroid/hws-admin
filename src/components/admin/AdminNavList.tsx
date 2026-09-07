@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
+  CalendarDays,
   Building2,
   LogOut,
   Rows3,
@@ -12,7 +13,7 @@ import {
 import { signOut } from "@/app/actions";
 
 /**
- * The admin's four places, written once.
+ * The admin's five places, written once.
  *
  * The rail and the phone panel show the same destinations, so they render
  * from one list. What changes between them is the ground they sit on: the
@@ -20,6 +21,7 @@ import { signOut } from "@/app/actions";
  */
 const ITEMS = [
   { href: "/listings", label: "Listings", icon: Rows3 },
+  { href: "/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/organisations", label: "Organisations", icon: BadgeCheck },
   { href: "/taxonomy/zones", label: "Access Zones", icon: Building2 },
   { href: "/taxonomy/situations", label: "Situations", icon: Tags },
