@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Page } from "@/components/ui/Page";
 import { VerificationForm } from "@/components/admin/VerificationForm";
-import { ClassificationForm } from "@/components/admin/ClassificationForm";
+import { ClassificationPanel } from "@/components/admin/ClassificationPanel";
 import {
   getAccessZones,
   getMarkets,
@@ -61,12 +61,12 @@ export default async function VerifyOrganisationPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   await requireAdmin();
 
   const { id } = await params;
-  const { error, saved } = await searchParams;
+  const { error } = await searchParams;
   const organisation = await getOrganisation(id);
 
   if (!organisation) notFound();
@@ -284,12 +284,8 @@ export default async function VerifyOrganisationPage({
       <section className="flex flex-col gap-4 border-t border-hairline-soft pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 eyebrow text-ink-60">Classification</h2>
-          {saved === "classification" ? (
-            <span className="text-[14px] font-semibold text-green-700">Saved</span>
-          ) : null}
         </div>
-        <ClassificationForm
-          organisationId={organisation.id}
+        <ClassificationPanel
           zones={zones}
           markets={markets}
           primaryZoneId={zoneChoice.primaryId}
