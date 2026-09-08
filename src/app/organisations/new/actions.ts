@@ -180,40 +180,29 @@ export async function saveClassification(formData: FormData) {
   const organisationId = String(formData.get("organisationId") ?? "");
   if (!organisationId) return;
 
-  const primaryZone = String(formData.get("primaryZone") ?? "");
-  const alsoZones = formData
-    .getAll("alsoZones")
-    .map(String)
-    .filter((id) => id && id !== primaryZone)
-    .slice(0, 2);
-
   const supabase = await createClient();
 
-  if (primaryZone) {
-    // Rewritten wholesale rather than diffed. The set is at most three, and a
-    // partial write would leave an organisation with two primaries, which the
-    // unique index would then refuse for reasons nobody could see.
-    const { error: clearError } = await supabase
-      .from("organisation_zones")
-      .delete()
-      .eq("organisation_id", organisationId);
-
-    if (clearError) throw clearError;
-
-    const { error: zoneError } = await supabase
-      .from("organisation_zones")
-      .insert([
-        { organisation_id: organisationId, zone_id: primaryZone, role: "primary" },
-        ...alsoZones.map((zone_id) => ({
-          organisation_id: organisationId,
-          zone_id,
-          role: "also" as const,
-        })),
-      ]);
-
-    if (zoneError) throw zoneError;
-  }
-
+  /*
+   * Access Zones are not written here, and the code that did has gone rather
+   * than been hidden behind a disabled control.
+   *
+   * They are the organisation's own account of where it works, chosen at
+   * onboarding, and an admin quietly moving one changes what that
+   * organisation is understood to do without anybody there being told. Zones
+   * also decide who appears under each zone on Discover, so a stray click on
+   * this screen silently rewrites a public page.
+   *
+   * The only place they are set is where there is nobody else to set them:
+   * onboarding, by the organisation, or the create form, for an organisation
+   * being entered by hand that has not arrived yet.
+   *
+   * Markets stay, because they are the opposite case. They are HWS's own
+   * editorial layer, no organisation ever sees or chooses one, and this
+   * screen is the only place they can be assigned at all. Locking them too
+   * would leave every self-onboarded organisation with none for good, and
+   * markets are what put an organisation in front of a woman who describes a
+   * need rather than names a category.
+   */
   const markets = formData.getAll("markets").map(String).filter(Boolean);
 
   const { error: clearMarkets } = await supabase
