@@ -82,11 +82,25 @@ export default async function OrganisationsPage({
       )
     : everything;
 
-  // Waiting first, because that is the work. The other tabs are for looking
-  // something up, which is why they exist at all.
-  const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : "Waiting";
+  /*
+   * Waiting first when there is anything waiting, and Verified when there is
+   * not.
+   *
+   * Waiting is the work, so it opens on the work. But an empty queue is the
+   * normal state most days, and landing on a blank screen reads as a tool
+   * with nothing in it rather than a job already done. Verified is what
+   * somebody wants next: the list they came to look something up in.
+   *
+   * Decided from the whole set rather than the search. Which tab opens is a
+   * fact about the queue, and flipping somebody to Verified because their
+   * search happened to match nobody waiting would be the search moving them
+   * without being asked.
+   */
+  const waitingOverall = everything.filter((o) => TAB_MATCHES.Waiting(o)).length;
+  const defaultTab: Tab = waitingOverall > 0 ? "Waiting" : "Verified";
+
+  const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : defaultTab;
   const organisations = all.filter((o) => TAB_MATCHES[tab](o));
-  const waiting = all.filter((o) => TAB_MATCHES.Waiting(o)).length;
 
   return (
     <Page width={820} top={56} gap={26}>
@@ -104,8 +118,8 @@ export default async function OrganisationsPage({
           </Link>
         </div>
         <p className="m-0 max-w-[62ch] text-[17px] leading-[1.55] text-ink-70">
-          {waiting === 0 && !q
-            ? "Nobody waiting. Organisations appear here when they finish onboarding."
+          {waitingOverall === 0 && !q
+            ? "Nobody waiting, so this opens on everyone verified. Organisations appear under Waiting when they finish onboarding."
             : "Checked once, against a public register. An organisation that is not verified cannot post a listing or invite anyone."}
         </p>
       </div>
@@ -171,9 +185,10 @@ export default async function OrganisationsPage({
         </div>
       ) : null}
 
-      {/* Waiting is the work, so it is the default. The other tabs exist for
-          looking something up after the fact, which the old queue could not
-          do at all: it only ever returned the two unfinished states. */}
+      {/* Waiting opens first when there is work in it, Verified when there
+          is not. The other tabs exist for looking something up after the
+          fact, which the old queue could not do at all: it only ever
+          returned the two unfinished states. */}
       <nav aria-label="Filter by status" className="flex flex-wrap gap-[10px]">
         {TABS.map((label) => {
           const active = label === tab;
@@ -181,12 +196,18 @@ export default async function OrganisationsPage({
           return (
             <Link
               key={label}
-              /* The search rides along, so moving between tabs keeps what
-                 was typed. Losing it on every tab press turns one search
+              /* The tab is always named, never left implicit. It used to be
+                 omitted for Waiting on the grounds that Waiting was the
+                 default, and the default now depends on whether anything is
+                 waiting: a bare link would mean different tabs on different
+                 days.
+
+                 The search rides along too, so moving between tabs keeps
+                 what was typed. Losing it on every press turns one search
                  into four. */
               href={`/organisations?${new URLSearchParams(
                 Object.entries({
-                  ...(label === "Waiting" ? {} : { tab: label }),
+                  tab: label,
                   ...(q ? { q } : {}),
                 }) as [string, string][],
               )}`}
