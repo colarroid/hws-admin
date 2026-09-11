@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/data/admin";
-import { timeToMinutes } from "@/lib/design/calendar";
+import { isDate, timeToMinutes } from "@/lib/design/calendar";
 
 export type CalendarState = { error?: string } | null;
 
@@ -15,21 +15,22 @@ export type CalendarState = { error?: string } | null;
  * check here surfaces as a redirect to sign in, which is the true answer.
  */
 
-/** Add a weekly rule: "Tuesdays, ten to four, half-hour slots". */
-export async function addAvailability(
+/**
+ * Set the hours HWS is open. They apply to every date.
+ *
+ * Upsert rather than insert, on the unique span index. Saving the same hours
+ * twice is then a no-op instead of an error about a duplicate key.
+ */
+export async function addHours(
   _prev: CalendarState,
   formData: FormData,
 ): Promise<CalendarState> {
   await requireAdmin();
 
-  const weekday = Number(formData.get("weekday"));
   const start = timeToMinutes(String(formData.get("start") ?? ""));
   const end = timeToMinutes(String(formData.get("end") ?? ""));
   const slot = Number(formData.get("slot") ?? 30);
 
-  if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) {
-    return { error: "Pick a day." };
-  }
   if (start === null || end === null) {
     return { error: "Times need to look like 10:00." };
   }
@@ -41,12 +42,12 @@ export async function addAvailability(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("booking_availability").insert({
-    weekday,
-    start_minute: start,
-    end_minute: end,
-    slot_minutes: slot,
-  });
+  const { error } = await supabase
+    .from("booking_availability")
+    .upsert(
+      { start_minute: start, end_minute: end, slot_minutes: slot },
+      { onConflict: "start_minute,end_minute" },
+    );
 
   if (error) return { error: error.message };
 
@@ -54,7 +55,7 @@ export async function addAvailability(
   return null;
 }
 
-export async function removeAvailability(id: string) {
+export async function removeHours(id: string) {
   await requireAdmin();
   const supabase = await createClient();
   await supabase.from("booking_availability").delete().eq("id", id);
@@ -62,7 +63,73 @@ export async function removeAvailability(id: string) {
 }
 
 /**
- * Close a date, or part of one.
+ * Take days off.
+ *
+ * A whole-day block per date. Delete first, so pressing this on a day that is
+ * already off leaves one block rather than two — there is no unique index to
+ * upsert against, and a partial one over `start_minute is null` is more
+ * machinery than two statements are worth.
+ *
+ * The delete is narrowed to whole-day blocks so it cannot quietly remove a
+ * part-day closure that the blocks editor below put there, which carries a
+ * reason somebody typed.
+ *
+ * Bookings already taken are untouched. Closing a day stops new slots being
+ * offered on it and cancels nobody: a booking that needs cancelling is
+ * cancelled from the bookings screen, by a person who then writes to her.
+ */
+export async function closeDates(dates: string[]) {
+  await requireAdmin();
+
+  const clean = dates.filter(isDate);
+  if (clean.length === 0) return;
+
+  const supabase = await createClient();
+
+  await supabase
+    .from("booking_blocks")
+    .delete()
+    .in("on_date", clean)
+    .is("start_minute", null);
+
+  const { error } = await supabase
+    .from("booking_blocks")
+    .insert(clean.map((on_date) => ({ on_date })));
+
+  if (error) throw new Error(`closing dates failed: ${error.message}`);
+
+  revalidatePath("/bookings/availability");
+}
+
+/**
+ * Put days back.
+ *
+ * Only the whole-day closures. A part-day block on the same date is somebody
+ * saying "I have a meeting at eleven", and reopening the day should not throw
+ * that away as well.
+ */
+export async function openDates(dates: string[]) {
+  await requireAdmin();
+
+  const clean = dates.filter(isDate);
+  if (clean.length === 0) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("booking_blocks")
+    .delete()
+    .in("on_date", clean)
+    .is("start_minute", null);
+
+  revalidatePath("/bookings/availability");
+}
+
+/**
+ * Close part of a date.
+ *
+ * Whole days are the calendar's job now — a square you press — so this is
+ * only ever a span, and the checkbox that used to mean "all day" is gone
+ * rather than left as a second way to do the same thing.
  *
  * The reason is for the admin and never leaves this tool. A woman choosing a
  * time sees the slot missing, not why: she has no business knowing somebody
@@ -75,16 +142,15 @@ export async function addBlock(
   await requireAdmin();
 
   const onDate = String(formData.get("date") ?? "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(onDate)) return { error: "Pick a date." };
+  if (!isDate(onDate)) return { error: "Pick a date." };
 
-  const wholeDay = formData.get("whole") === "on";
-  const start = wholeDay ? null : timeToMinutes(String(formData.get("start") ?? ""));
-  const end = wholeDay ? null : timeToMinutes(String(formData.get("end") ?? ""));
+  const start = timeToMinutes(String(formData.get("start") ?? ""));
+  const end = timeToMinutes(String(formData.get("end") ?? ""));
 
-  if (!wholeDay && (start === null || end === null)) {
-    return { error: "Give a start and a finish, or tick the whole day." };
+  if (start === null || end === null) {
+    return { error: "Give a start and a finish." };
   }
-  if (start !== null && end !== null && end <= start) {
+  if (end <= start) {
     return { error: "The finish has to be after the start." };
   }
 

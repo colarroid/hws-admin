@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/data/admin";
 import type {
-  AvailabilityRule,
   Block,
   Booking,
+  OpeningHours,
 } from "@/lib/design/calendar";
 
 /**
@@ -16,34 +16,55 @@ import type {
  */
 
 export type {
-  AvailabilityRule,
   Block,
   Booking,
+  OpeningHours,
 } from "@/lib/design/calendar";
 
-export async function getAvailability(): Promise<AvailabilityRule[]> {
+/**
+ * The hours HWS is open, which apply to every date.
+ *
+ * Usually one row. There is no date here and that is the point: dates are
+ * open by default and closed one at a time in `booking_blocks`.
+ */
+export async function getOpeningHours(): Promise<OpeningHours[]> {
   await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("booking_availability")
-    .select("id, weekday, start_minute, end_minute, slot_minutes")
-    .order("weekday")
+    .select("id, start_minute, end_minute, slot_minutes")
     .order("start_minute");
 
-  // Thrown, not swallowed. An admin looking at an empty availability screen
-  // must be looking at no rules rather than at a failed read: the first is a
-  // calendar to set up and the second is a calendar that has silently
-  // stopped offering anybody a time.
+  // Thrown, not swallowed. An admin looking at an empty hours list must be
+  // looking at no hours rather than at a failed read: the first is a calendar
+  // to set up and the second is a calendar that has silently stopped
+  // offering anybody a time.
   if (error) throw new Error(`booking_availability read failed: ${error.message}`);
 
   return (data ?? []).map((row) => ({
     id: row.id,
-    weekday: row.weekday,
     startMinute: row.start_minute,
     endMinute: row.end_minute,
     slotMinutes: row.slot_minutes,
   }));
+}
+
+/**
+ * Today in Europe/London, as YYYY-MM-DD.
+ *
+ * Not `new Date().toISOString()`, which is today in UTC: between midnight and
+ * one in the morning through British Summer Time those are different days,
+ * and the wrong one hides a day that is still open or shows one that has
+ * gone.
+ */
+export function londonToday(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 /** Blocks from today onwards. Past ones are history nobody needs to see. */
@@ -51,7 +72,7 @@ export async function getBlocks(): Promise<Block[]> {
   await requireAdmin();
   const supabase = await createClient();
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = londonToday();
 
   const { data, error } = await supabase
     .from("booking_blocks")
